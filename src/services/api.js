@@ -18,9 +18,19 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Only log out on 401 from authentication endpoints, not API endpoints
+    // API endpoints (balance, price, etc.) can return 401 for invalid API keys
+    // which should not log the user out
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      window.location.href = '/login'
+      const url = error.config?.url || ''
+      // Only log out if it's an auth-related endpoint
+      if (url.includes('/auth/') || url.includes('/admin/')) {
+        console.log('[AUTH] Authentication failed, logging out...')
+        localStorage.removeItem('token')
+        window.location.href = '/login'
+      }
+      // For other endpoints (balance, price, etc.), just reject the promise
+      // Don't log out - these are API key errors, not auth errors
     }
     // Handle timeout errors
     if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
@@ -36,18 +46,20 @@ export const getBalance = async () => {
     const response = await api.get('/balance')
     return response.data
   } catch (error) {
+    // Preserve the exact error message from the backend
     let errorMessage = error.response?.data?.error || error.message
     
-    // Provide more detailed error messages
-    if (error.response?.status === 400) {
-      errorMessage = error.response?.data?.error || 'API key not configured. Please set your API key in Settings.'
-    } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
+    // Only provide default messages for network/connection errors
+    if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
       errorMessage = 'Cannot connect to backend server. Make sure the server is running on http://localhost:5000'
     } else if (error.code === 'ECONNABORTED' || error.timeout) {
       errorMessage = 'Request timeout - the server is taking too long to respond'
     } else if (error.response?.status === 0) {
       errorMessage = 'Connection failed - check if backend server is running'
     }
+    // For 400 and 401, use the exact error message from backend
+    // 400 = API key not configured
+    // 401 = Invalid API key
     
     console.error('getBalance error:', {
       message: error.message,
@@ -58,7 +70,20 @@ export const getBalance = async () => {
     
     return {
       success: false,
-      error: errorMessage
+      error: errorMessage,
+      status: error.response?.status  // Include status code for frontend to distinguish
+    }
+  }
+}
+
+export const getGlobalSettings = async () => {
+  try {
+    const response = await api.get('/global-settings')
+    return response.data
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data?.error || error.message
     }
   }
 }
@@ -70,15 +95,18 @@ export const getPrice = async (country = '22', operator = '1', service = 'pfk') 
     })
     return response.data
   } catch (error) {
+    // Preserve the exact error message from the backend
     let errorMessage = error.response?.data?.error || error.message
     
-    if (error.response?.status === 400) {
-      errorMessage = error.response?.data?.error || 'API key not configured. Please set your API key in Settings.'
-    } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
+    // Only provide default messages for network/connection errors
+    if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
       errorMessage = 'Cannot connect to backend server. Make sure the server is running on http://localhost:5000'
     } else if (error.code === 'ECONNABORTED' || error.timeout) {
       errorMessage = 'Request timeout - the server is taking too long to respond'
     }
+    // For 400 and 401, use the exact error message from backend
+    // 400 = API key not configured
+    // 401 = Invalid API key
     
     console.error('getPrice error:', {
       message: error.message,
@@ -89,7 +117,8 @@ export const getPrice = async (country = '22', operator = '1', service = 'pfk') 
     
     return {
       success: false,
-      error: errorMessage
+      error: errorMessage,
+      status: error.response?.status  // Include status code for frontend to distinguish
     }
   }
 }
@@ -167,6 +196,8 @@ export const cancelNumber = async (requestId) => {
 }
 
 export const startAutomation = async (formData) => {
+  console.log('[DEBUG API] startAutomation called with formData:', formData)
+  
   try {
     // Automation start might take time, use longer timeout
     const automationApi = axios.create({
@@ -175,17 +206,40 @@ export const startAutomation = async (formData) => {
     })
     
     const token = localStorage.getItem('token')
+    console.log('[DEBUG API] Token present:', !!token)
+    
     if (token) {
       automationApi.defaults.headers.common['Authorization'] = `Bearer ${token}`
     }
     
-    const response = await automationApi.post('/automation/start', {
+    const requestData = {
       name: formData.name,
       house_flat_no: formData.houseFlatNo,
-      landmark: formData.landmark
+      landmark: formData.landmark,
+      total_orders: formData.totalOrders || '1',
+      max_parallel_windows: formData.maxParallelWindows || '1'
+    }
+    
+    console.log('[DEBUG API] Making POST request to /api/automation/start')
+    console.log('[DEBUG API] Request data:', requestData)
+    
+    const response = await automationApi.post('/automation/start', requestData)
+    
+    console.log('[DEBUG API] Response received:', {
+      status: response.status,
+      data: response.data
     })
+    
     return response.data
   } catch (error) {
+    console.error('[DEBUG API] Error in startAutomation:', error)
+    console.error('[DEBUG API] Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      statusText: error.response?.statusText
+    })
+    
     return {
       success: false,
       error: error.response?.data?.error || error.message || 'Request timeout'
@@ -197,6 +251,98 @@ export const stopAutomation = async () => {
   try {
     const response = await api.post('/automation/stop')
     return response.data
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    }
+  }
+}
+
+export const getAutomationStatus = async () => {
+  try {
+    const response = await api.get('/automation/status')
+    return response.data
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    }
+  }
+}
+
+// Reports API
+export const getOrdersReport = async () => {
+  try {
+    const response = await api.get('/reports/orders')
+    return response.data
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    }
+  }
+}
+
+export const downloadOrdersReport = async () => {
+  try {
+    const response = await api.get('/reports/orders/download', {
+      responseType: 'blob'
+    })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'my_orders.csv')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    }
+  }
+}
+
+// Logs API
+export const getLogsList = async () => {
+  try {
+    const response = await api.get('/logs/list')
+    return response.data
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    }
+  }
+}
+
+export const viewLogFile = async (filename) => {
+  try {
+    const response = await api.get(`/logs/view/${filename}`)
+    return response.data
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    }
+  }
+}
+
+export const downloadLogFile = async (filename) => {
+  try {
+    const response = await api.get(`/logs/download/${filename}`, {
+      responseType: 'blob'
+    })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', filename)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    return { success: true }
   } catch (error) {
     return {
       success: false,

@@ -22,9 +22,10 @@ db = None
 users_collection = None
 
 try:
-    # For MongoDB Atlas (mongodb+srv://), use longer timeout
-    timeout = 10000 if MONGO_URI.startswith('mongodb+srv://') else 5000
-    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=timeout)
+    # For MongoDB Atlas (mongodb+srv://), use shorter timeout to fail faster
+    # DNS resolution timeout is separate and happens before this timeout
+    timeout = 5000 if MONGO_URI.startswith('mongodb+srv://') else 3000
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=timeout, connectTimeoutMS=timeout)
     # Test connection
     client.admin.command('ping')
     db = client[DB_NAME]
@@ -33,13 +34,17 @@ try:
     print(f"MongoDB connected successfully to: {MONGO_URI.split('@')[1] if '@' in MONGO_URI else 'localhost'}")
 except Exception as e:
     _db_connected = False
-    print(f"WARNING: MongoDB connection failed: {e}")
+    error_msg = str(e)
+    print(f"WARNING: MongoDB connection failed: {error_msg}")
     if MONGO_URI.startswith('mongodb+srv://'):
         print("MongoDB Atlas connection failed. Check:")
-        print("  1. Internet connection")
+        print("  1. Internet connection (DNS resolution is timing out)")
         print("  2. MongoDB Atlas IP whitelist (add 0.0.0.0/0 for testing)")
         print("  3. Username and password in connection string")
-        print(f"  4. Connection string: {MONGO_URI[:50]}...")
+        print("  4. Firewall/VPN blocking MongoDB connections")
+        print(f"  5. Connection string: {MONGO_URI[:50]}...")
+        if "DNS" in error_msg or "resolution" in error_msg.lower():
+            print("  -> DNS resolution timeout detected. Check your internet connection and DNS settings.")
     else:
         print("MongoDB is not running. Please start MongoDB service.")
         print("Windows: net start MongoDB")
@@ -112,16 +117,53 @@ class User:
     @staticmethod
     def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
         """Get user by ID"""
+        # #region agent log
+        import json
+        try:
+            with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                f.write(json.dumps({"location":"user.py:113","message":"get_user_by_id entry","data":{"user_id":user_id},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"A"})+"\n")
+        except: pass
+        # #endregion
         if not _db_connected:
+            # #region agent log
+            try:
+                with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"location":"user.py:116","message":"DB not connected","data":{},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"A"})+"\n")
+            except: pass
+            # #endregion
             return None
         from bson import ObjectId
         try:
             user = users_collection.find_one({'_id': ObjectId(user_id)})
+            # #region agent log
+            try:
+                user_keys = list(user.keys()) if user else []
+                has_api_key = 'api_key' in user_keys if user else False
+                api_key_len = len(user.get('api_key', '')) if user and user.get('api_key') else 0
+                with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"location":"user.py:120","message":"DB query result","data":{"found":bool(user),"keys":user_keys,"has_api_key":has_api_key,"api_key_length":api_key_len},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"A"})+"\n")
+            except: pass
+            # #endregion
             if user:
                 user['_id'] = str(user['_id'])
                 user.pop('password', None)
+                # #region agent log
+                try:
+                    final_keys = list(user.keys())
+                    final_has_api_key = 'api_key' in final_keys
+                    final_api_key_len = len(user.get('api_key', '')) if user.get('api_key') else 0
+                    with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        f.write(json.dumps({"location":"user.py:123","message":"get_user_by_id exit","data":{"keys":final_keys,"has_api_key":final_has_api_key,"api_key_length":final_api_key_len},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"A"})+"\n")
+                except: pass
+                # #endregion
             return user
-        except:
+        except Exception as e:
+            # #region agent log
+            try:
+                with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"location":"user.py:125","message":"get_user_by_id exception","data":{"error":str(e)},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"A"})+"\n")
+            except: pass
+            # #endregion
             return None
     
     @staticmethod
@@ -138,20 +180,64 @@ class User:
     @staticmethod
     def update_user_settings(user_id: str, settings: Dict[str, Any]) -> Dict[str, Any]:
         """Update user settings"""
+        # #region agent log
+        import json
+        try:
+            settings_copy = {k: (v[:4]+'***'+v[-4:] if len(v)>8 else '****') if k=='api_key' and v else v for k,v in settings.items()}
+            with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                f.write(json.dumps({"location":"user.py:139","message":"update_user_settings entry","data":{"user_id":user_id,"settings_keys":list(settings.keys()),"settings_masked":settings_copy},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"B"})+"\n")
+        except: pass
+        # #endregion
         conn_check = User._check_connection()
         if conn_check:
+            # #region agent log
+            try:
+                with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"location":"user.py:142","message":"DB connection check failed","data":{"error":conn_check.get('error')},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"B"})+"\n")
+            except: pass
+            # #endregion
             return conn_check
         from bson import ObjectId
         try:
             settings['updated_at'] = datetime.utcnow()
+            # #region agent log
+            try:
+                with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"location":"user.py:147","message":"Before DB update","data":{"settings_to_update":list(settings.keys())},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"B"})+"\n")
+            except: pass
+            # #endregion
             result = users_collection.update_one(
                 {'_id': ObjectId(user_id)},
                 {'$set': settings}
             )
+            # #region agent log
+            try:
+                with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"location":"user.py:150","message":"After DB update","data":{"matched_count":result.matched_count,"modified_count":result.modified_count},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"B"})+"\n")
+            except: pass
+            # #endregion
             if result.modified_count > 0:
+                # #region agent log
+                try:
+                    with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                        f.write(json.dumps({"location":"user.py:152","message":"update_user_settings success","data":{},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"B"})+"\n")
+                except: pass
+                # #endregion
                 return {'success': True, 'message': 'Settings updated'}
+            # #region agent log
+            try:
+                with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"location":"user.py:153","message":"update_user_settings no changes","data":{},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"B"})+"\n")
+            except: pass
+            # #endregion
             return {'success': False, 'error': 'No changes made'}
         except Exception as e:
+            # #region agent log
+            try:
+                with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"location":"user.py:155","message":"update_user_settings exception","data":{"error":str(e)},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"B"})+"\n")
+            except: pass
+            # #endregion
             return {'success': False, 'error': str(e)}
     
     @staticmethod

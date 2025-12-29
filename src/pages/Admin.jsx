@@ -18,13 +18,12 @@ import {
   Save,
   X
 } from 'lucide-react'
-import { getBalance, getPrice } from '../services/api'
+import { getBalance } from '../services/api'
 import { getAllUsers, createUser, deleteUser, getGlobalSettings, updateGlobalSettings } from '../services/admin'
 
 function Admin() {
   const { isAdmin } = useAuth()
   const [balance, setBalance] = useState(null)
-  const [price, setPrice] = useState(null)
   const [loading, setLoading] = useState(false)
   const [lastUpdate, setLastUpdate] = useState(null)
   const [apiStatus, setApiStatus] = useState('unknown')
@@ -41,7 +40,8 @@ function Admin() {
   const [globalSettings, setGlobalSettings] = useState({
     country_code: '22',
     operator: '1',
-    service: 'pfk'
+    service: 'pfk',
+    price: 0.0
   })
   const [message, setMessage] = useState({ type: '', text: '' })
 
@@ -60,7 +60,12 @@ function Admin() {
     try {
       const result = await getGlobalSettings()
       if (result.success) {
-        setGlobalSettings(result.settings)
+        setGlobalSettings({
+          country_code: result.settings.country_code || '22',
+          operator: result.settings.operator || '1',
+          service: result.settings.service || 'pfk',
+          price: result.settings.price || 0.0
+        })
       }
     } catch (error) {
       console.error('Failed to load global settings:', error)
@@ -96,19 +101,20 @@ function Admin() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [balanceData, priceData] = await Promise.all([
-        getBalance(),
-        getPrice()
-      ])
+      const balanceData = await getBalance()
       
       if (balanceData.success) {
         setBalance(balanceData.balance)
-      } else if (balanceData.error?.includes('API key')) {
-        setMessage({ type: 'error', text: 'API key not configured. Please set your API key in Settings.' })
-      }
-      
-      if (priceData.success) {
-        setPrice(priceData.price)
+      } else if (balanceData.error) {
+        // Only show "not configured" if the error specifically says "not configured"
+        // Don't show warning for "Invalid API key" - that means it's configured but wrong
+        if (balanceData.error.includes('not configured') || balanceData.error.includes('not set')) {
+          setMessage({ type: 'error', text: 'API key not configured. Please set your API key in Settings.' })
+        } else if (balanceData.error.includes('Invalid API key')) {
+          setMessage({ type: 'error', text: 'Invalid API key. Please check your API credentials in Settings.' })
+        } else {
+          setMessage({ type: 'error', text: balanceData.error })
+        }
       }
       
       setLastUpdate(new Date())
@@ -248,13 +254,6 @@ function Admin() {
             loading={loading}
           />
           <StatCard
-            icon={<BarChart3 />}
-            label="Service Price"
-            value={price ? `₹${price}` : 'N/A'}
-            color="from-yellow-400 to-orange-500"
-            loading={loading}
-          />
-          <StatCard
             icon={<Activity />}
             label="API Status"
             value={apiStatus.toUpperCase()}
@@ -277,7 +276,7 @@ function Admin() {
           </div>
 
           <form onSubmit={handleUpdateGlobalSettings} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs sm:text-sm font-semibold text-gray-300 mb-2">
                   Country Code
@@ -309,6 +308,20 @@ function Admin() {
                   value={globalSettings.service}
                   onChange={(e) => setGlobalSettings({ ...globalSettings, service: e.target.value })}
                   className="w-full px-3 sm:px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white text-sm sm:text-base"
+                />
+              </div>
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                  Price (₹)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={globalSettings.price}
+                  onChange={(e) => setGlobalSettings({ ...globalSettings, price: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3 sm:px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white text-sm sm:text-base"
+                  placeholder="0.00"
                 />
               </div>
             </div>

@@ -18,7 +18,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Only log out on 401 from authentication endpoints
+    // The auth service is only used for auth endpoints, so we can log out on any 401
     if (error.response?.status === 401) {
+      console.log('[AUTH] Authentication failed, logging out...')
       localStorage.removeItem('token')
       window.location.href = '/login'
     }

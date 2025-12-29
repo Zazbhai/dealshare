@@ -12,16 +12,60 @@ def _http_get(params: Dict[str, Any], api_key: str, base_url: str) -> str:
     Perform a GET request with shared base URL and API key.
     Returns raw text from the API or raises ValueError on network/HTTP issues.
     """
+    # CRITICAL: Strip whitespace from API key
+    api_key = api_key.strip() if api_key else ''
+    
+    # #region agent log
+    import json
+    try:
+        api_key_masked = api_key[:4] + '*' * (len(api_key) - 8) + api_key[-4:] if len(api_key) > 8 else '****' if api_key else ''
+        with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+            f.write(json.dumps({"location":"api_dynamic.py:10","message":"_http_get entry","data":{"api_key_length":len(api_key),"api_key_masked":api_key_masked,"base_url":base_url,"params":params},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"D"})+"\n")
+    except: pass
+    # #endregion
+    
+    # Validate API key before making request
+    if not api_key:
+        raise ValueError("API key is empty or None")
+    
     merged = {"api_key": api_key, **params}
     url = f"{base_url}?{parse.urlencode(merged)}"
+    # #region agent log
+    try:
+        url_masked = url.split('api_key=')[0] + 'api_key=' + api_key_masked if 'api_key=' in url else url
+        with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+            f.write(json.dumps({"location":"api_dynamic.py:16","message":"URL constructed","data":{"url_masked":url_masked},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"D"})+"\n")
+    except: pass
+    # #endregion
+    
 
     try:
         with request.urlopen(url, timeout=15) as resp:
             # API returns plain text like: ACCESS_BALANCE:123.45
-            return resp.read().decode("utf-8").strip()
+            response = resp.read().decode("utf-8").strip()
+            # #region agent log
+            try:
+                with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                    f.write(json.dumps({"location":"api_dynamic.py:21","message":"_http_get success","data":{"status_code":resp.status,"response_length":len(response),"response_preview":response[:50]},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"E"})+"\n")
+            except: pass
+            # #endregion
+            return response
     except error.HTTPError as exc:
+        # #region agent log
+        try:
+            with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                f.write(json.dumps({"location":"api_dynamic.py:23","message":"_http_get HTTPError","data":{"status_code":exc.code,"reason":exc.reason},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"E"})+"\n")
+        except: pass
+        # #endregion
+        error_body = exc.read().decode('utf-8') if hasattr(exc, 'read') else 'N/A'
         raise ValueError(f"API HTTP {exc.code}: {exc.reason}") from exc
     except error.URLError as exc:
+        # #region agent log
+        try:
+            with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
+                f.write(json.dumps({"location":"api_dynamic.py:25","message":"_http_get URLError","data":{"reason":str(exc.reason)},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"E"})+"\n")
+        except: pass
+        # #endregion
         raise ValueError(f"Network error: {exc.reason}") from exc
 
 
@@ -103,14 +147,9 @@ def get_number(
         base_url
     )
     result = parse_number(raw)
-    # Track request ID in shared state
-    if result:
-        request_id, _ = result
-        try:
-            from shared_state import add_request_id
-            add_request_id(request_id)
-        except ImportError:
-            pass  # shared_state may not exist in all contexts
+    # NOTE: Each worker process is isolated and gets its own unique number/request_id
+    # No shared state needed - each process maintains its own request_id locally
+    # This prevents race conditions between workers
     return result
 
 
@@ -143,10 +182,15 @@ def get_otp(
     """
     Poll for OTP/status for up to timeout_seconds.
     Returns the OTP string if found; otherwise None.
+    
+    NOTE: This function polls for OTP using the specific request_id.
+    Each worker process calls this with its own unique request_id,
+    ensuring no race conditions between workers.
     """
     deadline = time.time() + timeout_seconds
 
     while True:
+        # Poll using the specific request_id (isolated per worker)
         response = _http_get({"action": "getStatus", "id": request_id}, api_key, base_url)
         status, otp = parse_otp_response(response)
 

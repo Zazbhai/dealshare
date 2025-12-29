@@ -22,9 +22,9 @@ db = None
 settings_collection = None
 
 try:
-    # For MongoDB Atlas, use longer timeout
-    timeout = 10000 if MONGO_URI.startswith('mongodb+srv://') else 5000
-    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=timeout)
+    # For MongoDB Atlas, use shorter timeout to fail faster
+    timeout = 5000 if MONGO_URI.startswith('mongodb+srv://') else 3000
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=timeout, connectTimeoutMS=timeout)
     client.admin.command('ping')
     db = client[DB_NAME]
     settings_collection = db.global_settings
@@ -36,13 +36,17 @@ try:
             'country_code': '22',
             'operator': '1',
             'service': 'pfk',
+            'price': 0.0,
             'created_at': datetime.utcnow(),
             'updated_at': datetime.utcnow()
         }
         settings_collection.insert_one(default_settings)
 except Exception as e:
     _db_connected = False
-    print(f"WARNING: MongoDB connection failed in global_settings: {e}")
+    error_msg = str(e)
+    print(f"WARNING: MongoDB connection failed in global_settings: {error_msg}")
+    if MONGO_URI.startswith('mongodb+srv://') and ("DNS" in error_msg or "resolution" in error_msg.lower()):
+        print("  -> DNS resolution timeout detected. Check your internet connection.")
     settings_collection = None
 
 class GlobalSettings:
@@ -54,7 +58,8 @@ class GlobalSettings:
             return {
                 'country_code': '22',
                 'operator': '1',
-                'service': 'pfk'
+                'service': 'pfk',
+                'price': 0.0
             }
         
         settings = settings_collection.find_one({})
@@ -62,16 +67,18 @@ class GlobalSettings:
             return {
                 'country_code': settings.get('country_code', '22'),
                 'operator': settings.get('operator', '1'),
-                'service': settings.get('service', 'pfk')
+                'service': settings.get('service', 'pfk'),
+                'price': settings.get('price', 0.0)
             }
         return {
             'country_code': '22',
             'operator': '1',
-            'service': 'pfk'
+            'service': 'pfk',
+            'price': 0.0
         }
     
     @staticmethod
-    def update_settings(country_code: str = None, operator: str = None, service: str = None) -> Dict[str, Any]:
+    def update_settings(country_code: str = None, operator: str = None, service: str = None, price: float = None) -> Dict[str, Any]:
         """Update global settings"""
         try:
             if not _db_connected or settings_collection is None:
@@ -88,6 +95,8 @@ class GlobalSettings:
                 update_data['operator'] = operator
             if service is not None:
                 update_data['service'] = service
+            if price is not None:
+                update_data['price'] = float(price)
             
             # If no settings exist, create them
             if settings_collection.count_documents({}) == 0:
@@ -95,6 +104,7 @@ class GlobalSettings:
                     'country_code': country_code or '22',
                     'operator': operator or '1',
                     'service': service or 'pfk',
+                    'price': float(price) if price is not None else 0.0,
                     'created_at': datetime.utcnow(),
                     'updated_at': datetime.utcnow()
                 }

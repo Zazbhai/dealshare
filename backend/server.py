@@ -35,9 +35,36 @@ from backend.middleware import require_auth, require_admin
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
+
 # Global state for automation
 active_workers = []
 stop_flag = threading.Event()
+
+def log_output(process, process_name="Worker"):
+    """Read and print subprocess output in real-time"""
+    def read_stdout():
+        try:
+            for line in iter(process.stdout.readline, b''):
+                if line:
+                    decoded = line.decode('utf-8', errors='replace').rstrip()
+                    print(f"[{process_name} STDOUT] {decoded}")
+        except Exception as e:
+            print(f"[ERROR] Error reading stdout for {process_name}: {e}")
+    
+    def read_stderr():
+        try:
+            for line in iter(process.stderr.readline, b''):
+                if line:
+                    decoded = line.decode('utf-8', errors='replace').rstrip()
+                    print(f"[{process_name} STDERR] {decoded}")
+        except Exception as e:
+            print(f"[ERROR] Error reading stderr for {process_name}: {e}")
+    
+    stdout_thread = threading.Thread(target=read_stdout, daemon=True)
+    stderr_thread = threading.Thread(target=read_stderr, daemon=True)
+    stdout_thread.start()
+    stderr_thread.start()
+    return stdout_thread, stderr_thread
 
 # ==================== AUTHENTICATION ENDPOINTS ====================
 
@@ -46,6 +73,13 @@ stop_flag = threading.Event()
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     try:
+        from models.user import _db_connected
+        if not _db_connected:
+            return jsonify({
+                "success": False,
+                "error": "Database connection failed. Please check your MongoDB connection and try again."
+            }), 503
+        
         data = request.json or {}
         username = data.get('username', '').strip()
         password = data.get('password', '')
@@ -99,9 +133,15 @@ def update_settings():
         data = request.json or {}
         user_id = request.current_user['_id']
         
+        
         # Users can only update API settings (country_code, operator, service are now global)
         allowed_fields = ['api_url', 'api_key']
         settings = {k: v for k, v in data.items() if k in allowed_fields}
+        
+        # CRITICAL: Strip whitespace from API key when saving
+        if 'api_key' in settings and settings['api_key']:
+            api_key_raw = settings['api_key']
+            settings['api_key'] = api_key_raw.strip()
         
         if not settings:
             return jsonify({
@@ -110,6 +150,17 @@ def update_settings():
             }), 400
         
         result = User.update_user_settings(user_id, settings)
+        
+        # Verify the update worked by fetching user again
+        if result.get('success'):
+            updated_user = User.get_user_by_id(user_id)
+            if updated_user:
+                updated_api_key = updated_user.get('api_key', '')
+                if updated_api_key:
+                    masked = updated_api_key[:4] + '*' * (len(updated_api_key) - 8) + updated_api_key[-4:] if len(updated_api_key) > 8 else '****'
+                else:
+                    print(f"[WARNING] API key not found in updated user object after save!")
+        
         return jsonify(result)
         
     except Exception as e:
@@ -151,21 +202,37 @@ def get_user_api_config():
     """Get API configuration from current user and global settings"""
     try:
         user = request.current_user
+        
+        api_key_raw = user.get('api_key', '') if user else ''
+        api_url = user.get('api_url', 'https://api.temporasms.com/stubs/handler_api.php') if user else 'https://api.temporasms.com/stubs/handler_api.php'
+        
+        # CRITICAL: Strip whitespace from API key (common issue)
+        api_key = api_key_raw.strip() if api_key_raw else ''
+        
+        
+        # Debug API key (masked) with detailed info
+        if api_key:
+            masked = api_key[:4] + '*' * (len(api_key) - 8) + api_key[-4:] if len(api_key) > 8 else '****'
+        
         global_settings = GlobalSettings.get_settings()
-        return {
-            'api_key': user.get('api_key', ''),
-            'api_url': user.get('api_url', 'https://api.temporasms.com/stubs/handler_api.php'),
+        config = {
+            'api_key': api_key,  # Use stripped version
+            'api_url': api_url,
             'country': global_settings.get('country_code', '22'),
             'operator': global_settings.get('operator', '1'),
             'service': global_settings.get('service', 'pfk')
         }
+        return config
     except Exception as e:
         # Fallback to defaults if there's an error
-        print(f"Error in get_user_api_config: {e}")
+        print(f"[ERROR] Error in get_user_api_config: {e}")
+        import traceback
+        traceback.print_exc()
         user = request.current_user
+        api_key = user.get('api_key', '') if user else ''
         return {
-            'api_key': user.get('api_key', ''),
-            'api_url': user.get('api_url', 'https://api.temporasms.com/stubs/handler_api.php'),
+            'api_key': api_key,
+            'api_url': user.get('api_url', 'https://api.temporasms.com/stubs/handler_api.php') if user else 'https://api.temporasms.com/stubs/handler_api.php',
             'country': '22',
             'operator': '1',
             'service': 'pfk'
@@ -176,21 +243,41 @@ def get_user_api_config():
 def balance():
     try:
         config = get_user_api_config()
-        if not config.get('api_key'):
+        api_key = config.get('api_key', '') if config else ''
+        
+        if not config or not api_key or not api_key.strip():
             return jsonify({
                 "success": False,
                 "error": "API key not configured. Please set your API key in Settings."
             }), 400
+        
         raw = get_balance(config['api_key'], config['api_url'])
+        
         parsed = parse_balance(raw)
+        
         return jsonify({
             "success": True,
             "raw": raw,
             "balance": parsed
         })
+    except ValueError as e:
+        error_msg = str(e)
+        if "401" in error_msg or "Unauthorized" in error_msg:
+            print(f"[ERROR] API authentication failed - invalid API key")
+            return jsonify({
+                "success": False,
+                "error": "Invalid API key. Please check your API credentials in Settings."
+            }), 401
+        else:
+            print(f"[ERROR] API error: {e}")
+            return jsonify({
+                "success": False,
+                "error": f"API error: {error_msg}"
+            }), 400
     except Exception as e:
         import traceback
-        print(f"Error in balance endpoint: {e}")
+        print(f"[ERROR] Error in balance endpoint: {e}")
+        print(f"[ERROR] Exception type: {type(e).__name__}")
         traceback.print_exc()
         return jsonify({
             "success": False,
@@ -202,29 +289,49 @@ def balance():
 def price():
     try:
         config = get_user_api_config()
-        if not config.get('api_key'):
+        api_key = config.get('api_key', '') if config else ''
+        
+        if not config or not api_key or not api_key.strip():
             return jsonify({
                 "success": False,
                 "error": "API key not configured. Please set your API key in Settings."
             }), 400
-        country = request.args.get('country', config['country'])
-        operator = request.args.get('operator', config['operator'])
-        service = request.args.get('service', config['service'])
         
-        price = get_price_for_service(
+        country = request.args.get('country', config.get('country', '22'))
+        operator = request.args.get('operator', config.get('operator', '1'))
+        service = request.args.get('service', config.get('service', 'pfk'))
+        
+        
+        price_result = get_price_for_service(
             service=service,
             country=country,
             operator=operator,
             api_key=config['api_key'],
             base_url=config['api_url']
         )
+        
         return jsonify({
             "success": True,
-            "price": price
+            "price": price_result
         })
+    except ValueError as e:
+        error_msg = str(e)
+        if "401" in error_msg or "Unauthorized" in error_msg:
+            print(f"[ERROR] API authentication failed - invalid API key")
+            return jsonify({
+                "success": False,
+                "error": "Invalid API key. Please check your API credentials in Settings."
+            }), 401
+        else:
+            print(f"[ERROR] API error: {e}")
+            return jsonify({
+                "success": False,
+                "error": f"API error: {error_msg}"
+            }), 400
     except Exception as e:
         import traceback
-        print(f"Error in price endpoint: {e}")
+        print(f"[ERROR] Error in price endpoint: {e}")
+        print(f"[ERROR] Exception type: {type(e).__name__}")
         traceback.print_exc()
         return jsonify({
             "success": False,
@@ -246,6 +353,244 @@ def prices():
             "prices": parsed
         })
     except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/reports/orders', methods=['GET'])
+@require_auth
+def get_orders_report():
+    """Get orders report from CSV file"""
+    try:
+        import csv
+        import os
+        csv_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'my_orders.csv')
+        
+        if not os.path.exists(csv_file):
+            return jsonify({
+                "success": True,
+                "orders": []
+            })
+        
+        orders = []
+        with open(csv_file, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                orders.append(row)
+        
+        # Reverse to show latest first
+        orders.reverse()
+        
+        return jsonify({
+            "success": True,
+            "orders": orders
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/reports/orders/download', methods=['GET'])
+@require_auth
+def download_orders_report():
+    """Download orders report CSV file"""
+    try:
+        import os
+        from flask import send_file
+        csv_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'my_orders.csv')
+        
+        if not os.path.exists(csv_file):
+            return jsonify({
+                "success": False,
+                "error": "No orders report found"
+            }), 404
+        
+        return send_file(
+            csv_file,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name='my_orders.csv'
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/logs/list', methods=['GET'])
+@require_auth
+def get_logs_list():
+    """Get list of log files"""
+    try:
+        import os
+        from datetime import datetime
+        logs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+        
+        if not os.path.exists(logs_dir):
+            return jsonify({
+                "success": True,
+                "logs": []
+            })
+        
+        log_files = []
+        for filename in os.listdir(logs_dir):
+            if filename.endswith('.log') or filename.endswith('.txt'):
+                filepath = os.path.join(logs_dir, filename)
+                stat = os.stat(filepath)
+                log_files.append({
+                    "filename": filename,
+                    "size": stat.st_size,
+                    "modified": datetime.fromtimestamp(stat.st_mtime).isoformat()
+                })
+        
+        # Sort by modified time (newest first)
+        log_files.sort(key=lambda x: x['modified'], reverse=True)
+        
+        return jsonify({
+            "success": True,
+            "logs": log_files
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/logs/view/<filename>', methods=['GET'])
+@require_auth
+def view_log_file(filename):
+    """View log file content"""
+    try:
+        import os
+        logs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+        filepath = os.path.join(logs_dir, filename)
+        
+        # Security: prevent directory traversal
+        if not os.path.abspath(filepath).startswith(os.path.abspath(logs_dir)):
+            return jsonify({
+                "success": False,
+                "error": "Invalid filename"
+            }), 400
+        
+        if not os.path.exists(filepath):
+            return jsonify({
+                "success": False,
+                "error": "Log file not found"
+            }), 404
+        
+        with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
+            content = f.read()
+        
+        return jsonify({
+            "success": True,
+            "filename": filename,
+            "content": content
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/logs/download/<filename>', methods=['GET'])
+@require_auth
+def download_log_file(filename):
+    """Download log file"""
+    try:
+        import os
+        from flask import send_file
+        logs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+        filepath = os.path.join(logs_dir, filename)
+        
+        # Security: prevent directory traversal
+        if not os.path.abspath(filepath).startswith(os.path.abspath(logs_dir)):
+            return jsonify({
+                "success": False,
+                "error": "Invalid filename"
+            }), 400
+        
+        if not os.path.exists(filepath):
+            return jsonify({
+                "success": False,
+                "error": "Log file not found"
+            }), 404
+        
+        return send_file(
+            filepath,
+            mimetype='text/plain',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/debug/test-api-key', methods=['GET'])
+@require_auth
+def test_api_key():
+    """Debug endpoint to test API key and show exact URL being sent"""
+    try:
+        config = get_user_api_config()
+        api_key = config.get('api_key', '')
+        api_url = config.get('api_url', '')
+        
+        if not api_key:
+            return jsonify({
+                "success": False,
+                "error": "API key not configured"
+            }), 400
+        
+        # Construct the exact URL that will be sent
+        from urllib import parse
+        test_params = {"action": "getBalance", "api_key": api_key}
+        test_url = f"{api_url}?{parse.urlencode(test_params)}"
+        
+        print(f"  API Key: {api_key}")
+        print(f"  API URL: {api_url}")
+        print(f"  Full Test URL: {test_url}")
+        print(f"  ⚠️  COPY THIS URL AND TEST IT IN YOUR BROWSER")
+        
+        # Try to make the actual request
+        try:
+            from api_dynamic import get_balance
+            raw = get_balance(api_key, api_url)
+            return jsonify({
+                "success": True,
+                "message": "API key is valid!",
+                "response": raw,
+                "test_url": test_url,
+                "api_key_length": len(api_key),
+                "api_key_first_8": api_key[:8],
+                "api_key_last_4": api_key[-4:]
+            })
+        except ValueError as e:
+            error_msg = str(e)
+            return jsonify({
+                "success": False,
+                "error": error_msg,
+                "test_url": test_url,
+                "api_key_length": len(api_key),
+                "api_key_first_8": api_key[:8],
+                "api_key_last_4": api_key[-4:],
+                "message": "API key test failed. Copy the test_url above and test it in your browser to verify."
+            }), 401
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({
             "success": False,
             "error": str(e)
@@ -354,10 +699,15 @@ def cancel():
 def automation_start():
     try:
         config = get_user_api_config()
+        
         data = request.json or {}
+        
         name = data.get('name', '')
         house_flat_no = data.get('house_flat_no', '')
         landmark = data.get('landmark', '')
+        total_orders = data.get('total_orders', 1)  # Default to 1 if not specified
+        max_parallel_windows = data.get('max_parallel_windows', 1)  # Default to 1 if not specified
+        
         
         if not name or not house_flat_no or not landmark:
             return jsonify({
@@ -365,8 +715,73 @@ def automation_start():
                 "error": "Name, house_flat_no, and landmark are required"
             }), 400
         
+        # Validate numeric inputs
+        try:
+            total_orders = int(total_orders)
+            max_parallel_windows = int(max_parallel_windows)
+            if total_orders < 1:
+                return jsonify({
+                    "success": False,
+                    "error": "Total orders must be at least 1"
+                }), 400
+            if max_parallel_windows < 1:
+                return jsonify({
+                    "success": False,
+                    "error": "Max parallel windows must be at least 1"
+                }), 400
+            if max_parallel_windows > total_orders:
+                max_parallel_windows = total_orders  # Cap max_parallel_windows to total_orders
+        except (ValueError, TypeError):
+            return jsonify({
+                "success": False,
+                "error": "total_orders and max_parallel_windows must be valid numbers"
+            }), 400
+        
         # Clear stop flag
         stop_flag.clear()
+        
+        # Clear/Initialize status file
+        try:
+            import json
+            from datetime import datetime
+            status_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'automation_status.json')
+            status_data = {
+                "is_running": True,
+                "success_count": 0,
+                "failure_count": 0,
+                "start_time": datetime.now().isoformat(),
+                "end_time": None
+            }
+            with open(status_file, 'w', encoding='utf-8') as f:
+                json.dump(status_data, f)
+            print(f"[INFO] Status file initialized: {status_file}")
+        except Exception as e:
+            print(f"[WARNING] Failed to initialize status file: {e}")
+        
+        # Clear logs folder before starting new batch
+        try:
+            import shutil
+            logs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+            if os.path.exists(logs_dir):
+                # Remove all files in logs directory
+                for filename in os.listdir(logs_dir):
+                    filepath = os.path.join(logs_dir, filename)
+                    try:
+                        if os.path.isfile(filepath):
+                            os.remove(filepath)
+                        elif os.path.isdir(filepath):
+                            shutil.rmtree(filepath)
+                    except Exception as e:
+                        print(f"[WARNING] Failed to remove {filepath}: {e}")
+                print(f"[INFO] Logs folder cleared: {logs_dir}")
+            else:
+                # Create logs directory if it doesn't exist
+                os.makedirs(logs_dir, exist_ok=True)
+                print(f"[INFO] Created logs directory: {logs_dir}")
+        except Exception as e:
+            print(f"[WARNING] Failed to clear logs folder: {e}")
+            import traceback
+            traceback.print_exc()
         
         # Set user config in environment
         env = os.environ.copy()
@@ -378,25 +793,79 @@ def automation_start():
         env['COUNTRY'] = config['country']
         env['OPERATOR'] = config['operator']
         env['SERVICE'] = config['service']
+        env['TOTAL_ORDERS'] = str(total_orders)
+        env['MAX_PARALLEL_WINDOWS'] = str(max_parallel_windows)
         
-        # Start automation in background thread
+        # Start automation worker that will manage parallel execution
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        main_script = os.path.join(base_dir, 'main.py')
+        worker_script = os.path.join(base_dir, 'automation_worker.py')
+        
         
         process = subprocess.Popen(
-            [sys.executable, main_script],
+            [sys.executable, '-u', worker_script],  # -u flag for unbuffered output
             cwd=base_dir,
             env=env,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
+            bufsize=1,
+            universal_newlines=False  # Keep as bytes for better handling
         )
+        
+        
+        # Start reading output in background threads
+        log_output(process, f"Worker-{process.pid}")
         
         active_workers.append(process)
         
-        return jsonify({
+        response_data = {
             "success": True,
-            "message": "Automation started"
-        })
+            "message": f"Automation started: {total_orders} orders, max {max_parallel_windows} parallel windows",
+            "total_orders": total_orders,
+            "max_parallel_windows": max_parallel_windows
+        }
+        return jsonify(response_data)
+    except Exception as e:
+        print(f"[ERROR SERVER] Exception in automation_start: {e}")
+        import traceback
+        print(f"[ERROR SERVER] Traceback:")
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/automation/status', methods=['GET'])
+@require_auth
+def automation_status():
+    """Get current automation status"""
+    try:
+        import json
+        import os
+        status_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'automation_status.json')
+        
+        if not os.path.exists(status_file):
+            return jsonify({
+                "success": True,
+                "is_running": False,
+                "success_count": 0,
+                "failure_count": 0
+            })
+        
+        try:
+            with open(status_file, 'r', encoding='utf-8') as f:
+                status_data = json.load(f)
+            return jsonify({
+                "success": True,
+                **status_data
+            })
+        except Exception as e:
+            print(f"[ERROR] Failed to read status file: {e}")
+            return jsonify({
+                "success": True,
+                "is_running": False,
+                "success_count": 0,
+                "failure_count": 0
+            })
     except Exception as e:
         return jsonify({
             "success": False,
@@ -437,6 +906,22 @@ def automation_stop():
         # Clear lists and shared state
         active_workers.clear()
         clear_all_request_ids()
+        
+        # Update status file to mark as stopped
+        try:
+            import json
+            import os
+            from datetime import datetime
+            status_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'automation_status.json')
+            if os.path.exists(status_file):
+                with open(status_file, 'r', encoding='utf-8') as f:
+                    status_data = json.load(f)
+                status_data['is_running'] = False
+                status_data['end_time'] = datetime.now().isoformat()
+                with open(status_file, 'w', encoding='utf-8') as f:
+                    json.dump(status_data, f)
+        except Exception as e:
+            print(f"[WARNING] Failed to update status file on stop: {e}")
         
         return jsonify({
             "success": True,
@@ -510,16 +995,34 @@ def get_global_settings():
             "error": str(e)
         }), 500
 
+@app.route('/api/global-settings', methods=['GET'])
+@require_auth
+def get_global_settings_user():
+    """Get global settings for users (price only)"""
+    try:
+        settings = GlobalSettings.get_settings()
+        # Users can only see price, not other settings
+        return jsonify({
+            "success": True,
+            "price": settings.get('price', 0.0)
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 @app.route('/api/admin/global-settings', methods=['PUT'])
 @require_admin
 def update_global_settings():
-    """Update global settings (admin only) - country_code, operator, service"""
+    """Update global settings (admin only) - country_code, operator, service, price"""
     try:
         data = request.json or {}
         
         country_code = data.get('country_code')
         operator = data.get('operator')
         service = data.get('service')
+        price = data.get('price')
         
         # Only update fields that are provided
         update_data = {}
@@ -529,6 +1032,14 @@ def update_global_settings():
             update_data['operator'] = operator
         if service is not None:
             update_data['service'] = service
+        if price is not None:
+            try:
+                update_data['price'] = float(price)
+            except (ValueError, TypeError):
+                return jsonify({
+                    "success": False,
+                    "error": "Price must be a valid number"
+                }), 400
         
         if not update_data:
             return jsonify({
@@ -539,7 +1050,8 @@ def update_global_settings():
         result = GlobalSettings.update_settings(
             country_code=country_code,
             operator=operator,
-            service=service
+            service=service,
+            price=price
         )
         
         return jsonify(result)

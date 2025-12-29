@@ -25,6 +25,14 @@ def require_auth(f):
         if not payload:
             return jsonify({'success': False, 'error': 'Invalid or expired token'}), 401
         
+        # Check database connection
+        from models.user import _db_connected
+        if not _db_connected:
+            return jsonify({
+                'success': False, 
+                'error': 'Database connection failed. Please check your MongoDB connection.'
+            }), 503
+        
         # Get user from database
         user_id = payload.get('sub')
         user = User.get_user_by_id(user_id)
