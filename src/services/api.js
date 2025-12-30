@@ -217,7 +217,13 @@ export const startAutomation = async (formData) => {
       house_flat_no: formData.houseFlatNo,
       landmark: formData.landmark,
       total_orders: formData.totalOrders || '1',
-      max_parallel_windows: formData.maxParallelWindows || '1'
+      max_parallel_windows: formData.maxParallelWindows || '1',
+      primary_product_url: formData.primaryProductUrl ? formData.primaryProductUrl.trim() : '',
+      secondary_product_url: formData.secondaryProductUrl ? formData.secondaryProductUrl.trim() : '',
+      third_product_url: formData.thirdProductUrl ? formData.thirdProductUrl.trim() : '',
+      latitude: formData.latitude || '26.994880',
+      longitude: formData.longitude || '75.774836',
+      select_location: formData.selectLocation !== undefined ? formData.selectLocation : true
     }
     
     console.log('[DEBUG API] Making POST request to /api/automation/start')

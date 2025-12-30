@@ -146,7 +146,7 @@ def main():
     active_processes = []
     order_queue = Queue()
     output_threads = {}  # Store output reading threads
-    session_start_delay = 15  # Delay in seconds between starting each session (increased to prevent resource contention)
+    session_start_delay = 8  # Delay in seconds between starting each session (increased for better resource management)
     sessions_started = 0  # Track how many sessions have been started
     
     # Status file for tracking
@@ -155,12 +155,13 @@ def main():
     from datetime import datetime
     
     # Initialize status file
-    def update_status_file(is_running, success, failure):
+    def update_status_file(is_running, success, failure, all_products_failed=False):
         try:
             status_data = {
                 "is_running": is_running,
-                "success_count": success,
-                "failure_count": failure,
+                "success": success,
+                "failure": failure,
+                "all_products_failed": all_products_failed,
                 "start_time": datetime.now().isoformat() if is_running else None,
                 "end_time": datetime.now().isoformat() if not is_running else None
             }
@@ -183,12 +184,14 @@ def main():
     
     print(f"[DEBUG] Added {total_orders} orders to queue")
     
+    should_stop_all = False  # Flag to stop all workers if all product URLs fail
+    
     try:
-        while completed < total_orders:
+        while completed < total_orders and not should_stop_all:
             print(f"[DEBUG] Loop iteration: completed={completed}/{total_orders}, active={len(active_processes)}, queue_size={order_queue.qsize()}")
             
             # Start new processes up to max_parallel
-            while len(active_processes) < max_parallel and not order_queue.empty():
+            while len(active_processes) < max_parallel and not order_queue.empty() and not should_stop_all:
                 order_num = order_queue.get()
                 
                 # Add delay between starting sessions (except for the first one)
@@ -219,6 +222,9 @@ def main():
             
             # Check for completed processes
             for order_num, process in active_processes[:]:
+                if should_stop_all:
+                    break
+                    
                 return_code = process.poll()
                 if return_code is not None:
                     # Process finished
@@ -249,22 +255,46 @@ def main():
                     except:
                         pass
                     
-                    # Clean up process resources
-                    try:
-                        process.terminate()
-                        process.wait(timeout=2)
-                    except:
-                        try:
-                            process.kill()
-                        except:
-                            pass
-                    
                     active_processes.remove((order_num, process))
                     if order_num in output_threads:
                         del output_threads[order_num]
                     
-                    # Add small delay after process completion to allow resource cleanup
-                    time.sleep(2)
+                    # If process failed with exit code 1 (all product URLs failed), stop all workers immediately
+                    if return_code == 1:
+                        print(f"[CRITICAL] Order {order_num} failed - all product URLs failed. Stopping all workers immediately...")
+                        write_to_log(f"[CRITICAL] Order {order_num} failed - all product URLs failed. Stopping all workers immediately...", worker_id=order_num)
+                        should_stop_all = True
+                        
+                        # Terminate all remaining active processes
+                        for remaining_order_num, remaining_process in active_processes[:]:
+                            try:
+                                print(f"[DEBUG] Terminating process for order {remaining_order_num}")
+                                remaining_process.terminate()
+                                try:
+                                    remaining_process.wait(timeout=5)
+                                except:
+                                    remaining_process.kill()
+                            except Exception as e:
+                                print(f"[ERROR] Failed to terminate process for order {remaining_order_num}: {e}")
+                        
+                        # Mark remaining orders in queue and active processes as failed
+                        remaining_in_queue = order_queue.qsize()
+                        remaining_active = len(active_processes)
+                        remaining_total = remaining_in_queue + remaining_active
+                        
+                        if remaining_total > 0:
+                            failure_count += remaining_total
+                            completed += remaining_total
+                            print(f"[INFO] Marked {remaining_total} remaining orders as failed ({remaining_in_queue} in queue, {remaining_active} active)")
+                            write_to_log(f"[INFO] Marked {remaining_total} remaining orders as failed", worker_id=None)
+                        
+                        # Clear the queue and active processes
+                        while not order_queue.empty():
+                            order_queue.get()
+                        active_processes.clear()
+                        # Mark as all products failed
+                        update_status_file(False, success_count, failure_count, all_products_failed=True)
+                        break  # Break out of the for loop
             
             time.sleep(0.5)  # Small delay to avoid busy waiting
     except KeyboardInterrupt:

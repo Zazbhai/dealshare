@@ -134,8 +134,8 @@ def update_settings():
         user_id = request.current_user['_id']
         
         
-        # Users can only update API settings (country_code, operator, service are now global)
-        allowed_fields = ['api_url', 'api_key']
+        # Users can update API settings and product URLs
+        allowed_fields = ['api_url', 'api_key', 'primary_product_url', 'secondary_product_url', 'third_product_url']
         settings = {k: v for k, v in data.items() if k in allowed_fields}
         
         # CRITICAL: Strip whitespace from API key when saving
@@ -707,12 +707,24 @@ def automation_start():
         landmark = data.get('landmark', '')
         total_orders = data.get('total_orders', 1)  # Default to 1 if not specified
         max_parallel_windows = data.get('max_parallel_windows', 1)  # Default to 1 if not specified
-        
+        primary_product_url = data.get('primary_product_url', '')
+        secondary_product_url = data.get('secondary_product_url', '')
+        third_product_url = data.get('third_product_url', '')
+        latitude = data.get('latitude', '26.994880')
+        longitude = data.get('longitude', '75.774836')
+        select_location = data.get('select_location', True)
         
         if not name or not house_flat_no or not landmark:
             return jsonify({
                 "success": False,
                 "error": "Name, house_flat_no, and landmark are required"
+            }), 400
+        
+        # Primary product URL is mandatory
+        if not primary_product_url or not primary_product_url.strip():
+            return jsonify({
+                "success": False,
+                "error": "Primary product URL is required"
             }), 400
         
         # Validate numeric inputs
@@ -747,8 +759,9 @@ def automation_start():
             status_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'automation_status.json')
             status_data = {
                 "is_running": True,
-                "success_count": 0,
-                "failure_count": 0,
+                "success": 0,
+                "failure": 0,
+                "all_products_failed": False,
                 "start_time": datetime.now().isoformat(),
                 "end_time": None
             }
@@ -795,6 +808,12 @@ def automation_start():
         env['SERVICE'] = config['service']
         env['TOTAL_ORDERS'] = str(total_orders)
         env['MAX_PARALLEL_WINDOWS'] = str(max_parallel_windows)
+        env['PRIMARY_PRODUCT_URL'] = primary_product_url
+        env['SECONDARY_PRODUCT_URL'] = secondary_product_url
+        env['THIRD_PRODUCT_URL'] = third_product_url
+        env['LATITUDE'] = str(latitude)
+        env['LONGITUDE'] = str(longitude)
+        env['SELECT_LOCATION'] = '1' if select_location else '0'
         
         # Start automation worker that will manage parallel execution
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -847,13 +866,17 @@ def automation_status():
             return jsonify({
                 "success": True,
                 "is_running": False,
-                "success_count": 0,
-                "failure_count": 0
+                "success": 0,
+                "failure": 0,
+                "all_products_failed": False
             })
         
         try:
             with open(status_file, 'r', encoding='utf-8') as f:
                 status_data = json.load(f)
+            # Ensure all_products_failed is included (for backward compatibility)
+            if 'all_products_failed' not in status_data:
+                status_data['all_products_failed'] = False
             return jsonify({
                 "success": True,
                 **status_data
@@ -863,8 +886,9 @@ def automation_status():
             return jsonify({
                 "success": True,
                 "is_running": False,
-                "success_count": 0,
-                "failure_count": 0
+                "success": 0,
+                "failure": 0,
+                "all_products_failed": False
             })
     except Exception as e:
         return jsonify({

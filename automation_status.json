@@ -1,1 +1,1 @@
-{"is_running": false, "success_count": 0, "failure_count": 1, "start_time": null, "end_time": "2025-12-29T22:46:04.864753"}
+{"is_running": false, "success": 0, "failure": 1, "all_products_failed": false, "start_time": null, "end_time": "2025-12-30T13:53:42.306995"}
