@@ -51,7 +51,7 @@ export const getBalance = async () => {
     
     // Only provide default messages for network/connection errors
     if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
-      errorMessage = 'Cannot connect to backend server. Make sure the server is running on http://localhost:5000'
+      errorMessage = `Cannot connect to backend server. Make sure the server is running on ${import.meta.env.VITE_BACKEND_URL || window.location.origin.replace(':3000', ':5000')}`
     } else if (error.code === 'ECONNABORTED' || error.timeout) {
       errorMessage = 'Request timeout - the server is taking too long to respond'
     } else if (error.response?.status === 0) {
@@ -100,7 +100,7 @@ export const getPrice = async (country = '22', operator = '1', service = 'pfk') 
     
     // Only provide default messages for network/connection errors
     if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
-      errorMessage = 'Cannot connect to backend server. Make sure the server is running on http://localhost:5000'
+      errorMessage = `Cannot connect to backend server. Make sure the server is running on ${import.meta.env.VITE_BACKEND_URL || window.location.origin.replace(':3000', ':5000')}`
     } else if (error.code === 'ECONNABORTED' || error.timeout) {
       errorMessage = 'Request timeout - the server is taking too long to respond'
     }
@@ -221,9 +221,15 @@ export const startAutomation = async (formData) => {
       primary_product_url: formData.primaryProductUrl ? formData.primaryProductUrl.trim() : '',
       secondary_product_url: formData.secondaryProductUrl ? formData.secondaryProductUrl.trim() : '',
       third_product_url: formData.thirdProductUrl ? formData.thirdProductUrl.trim() : '',
+      primary_product_quantity: formData.primaryProductQuantity || '1',
+      secondary_product_quantity: formData.secondaryProductQuantity || '1',
+      third_product_quantity: formData.thirdProductQuantity || '1',
+      retry_orders: formData.retryOrders !== undefined ? formData.retryOrders : false,
       latitude: formData.latitude || '26.994880',
       longitude: formData.longitude || '75.774836',
-      select_location: formData.selectLocation !== undefined ? formData.selectLocation : true
+      select_location: formData.selectLocation !== undefined ? formData.selectLocation : true,
+      search_input: formData.searchInput || 'chinu juice center',
+      location_text: formData.locationText || 'Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India'
     }
     
     console.log('[DEBUG API] Making POST request to /api/automation/start')

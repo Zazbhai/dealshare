@@ -130,15 +130,18 @@ def main():
     
     total_orders = int(os.environ.get('TOTAL_ORDERS', '1'))
     max_parallel = int(os.environ.get('MAX_PARALLEL_WINDOWS', '1'))
+    retry_orders = os.environ.get('RETRY_ORDERS', '0') == '1'
     
     print(f"[DEBUG] Environment variables:")
     print(f"[DEBUG]   TOTAL_ORDERS: {total_orders}")
     print(f"[DEBUG]   MAX_PARALLEL_WINDOWS: {max_parallel}")
+    print(f"[DEBUG]   RETRY_ORDERS: {retry_orders}")
     print(f"[DEBUG]   AUTOMATION_NAME: {os.environ.get('AUTOMATION_NAME', 'NOT SET')}")
     print(f"[DEBUG]   API_KEY: {'SET' if os.environ.get('API_KEY') else 'NOT SET'}")
     
-    print(f"[INFO] Starting automation: {total_orders} orders, max {max_parallel} parallel windows")
-    write_to_log(f"[INFO] Starting automation: {total_orders} orders, max {max_parallel} parallel windows")
+    retry_status = "enabled (failed orders will retry once)" if retry_orders else "disabled"
+    print(f"[INFO] Starting automation: {total_orders} orders, max {max_parallel} parallel windows, retry: {retry_status}")
+    write_to_log(f"[INFO] Starting automation: {total_orders} orders, max {max_parallel} parallel windows, retry: {retry_status}")
     
     completed = 0
     success_count = 0
@@ -148,6 +151,7 @@ def main():
     output_threads = {}  # Store output reading threads
     session_start_delay = 8  # Delay in seconds between starting each session (increased for better resource management)
     sessions_started = 0  # Track how many sessions have been started
+    retried_orders = set()  # Track which orders have already been retried
     
     # Status file for tracking
     status_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'automation_status.json')
@@ -228,20 +232,7 @@ def main():
                 return_code = process.poll()
                 if return_code is not None:
                     # Process finished
-                    completed += 1
-                    status = "SUCCESS" if return_code == 0 else "FAILED"
-                    if return_code == 0:
-                        success_count += 1
-                    else:
-                        failure_count += 1
-                    
-                    print(f"[INFO] Order {order_num} completed ({status}, return_code={return_code}) - {completed}/{total_orders} total")
-                    write_to_log(f"[INFO] Order {order_num} completed ({status}, return_code={return_code}) - {completed}/{total_orders} total", worker_id=order_num)
-                    
-                    # Update status file
-                    update_status_file(True, success_count, failure_count)
-                    
-                    # Read any remaining output
+                    # Read any remaining output first
                     try:
                         stdout, stderr = process.communicate(timeout=1)
                         if stdout:
@@ -255,11 +246,44 @@ def main():
                     except:
                         pass
                     
+                    # Remove from active processes
                     active_processes.remove((order_num, process))
                     if order_num in output_threads:
                         del output_threads[order_num]
                     
-                    # If process failed with exit code 1 (all product URLs failed), stop all workers immediately
+                    status = "SUCCESS" if return_code == 0 else "FAILED"
+                    
+                    if return_code == 0:
+                        # Order succeeded
+                        completed += 1
+                        success_count += 1
+                        print(f"[INFO] Order {order_num} completed (SUCCESS, return_code={return_code}) - {completed}/{total_orders} total")
+                        write_to_log(f"[INFO] Order {order_num} completed (SUCCESS, return_code={return_code}) - {completed}/{total_orders} total", worker_id=order_num)
+                    else:
+                        # Order failed - check if we should retry (skip retry for exit code 5 - all products failed)
+                        if retry_orders and return_code != 5 and order_num not in retried_orders:
+                            # Retry this order once
+                            retried_orders.add(order_num)
+                            print(f"[INFO] Order {order_num} failed (return_code={return_code}) - Retrying once...")
+                            write_to_log(f"[INFO] Order {order_num} failed (return_code={return_code}) - Retrying once...", worker_id=order_num)
+                            
+                            # Add order back to queue for retry
+                            order_queue.put(order_num)
+                        else:
+                            # Order failed and either retry is disabled, already retried, or critical failure (exit code 5)
+                            completed += 1
+                            failure_count += 1
+                            if order_num in retried_orders:
+                                print(f"[INFO] Order {order_num} failed again after retry (return_code={return_code}) - Marking as FAILED - {completed}/{total_orders} total")
+                                write_to_log(f"[INFO] Order {order_num} failed again after retry (return_code={return_code}) - Marking as FAILED - {completed}/{total_orders} total", worker_id=order_num)
+                            else:
+                                print(f"[INFO] Order {order_num} completed (FAILED, return_code={return_code}) - {completed}/{total_orders} total")
+                                write_to_log(f"[INFO] Order {order_num} completed (FAILED, return_code={return_code}) - {completed}/{total_orders} total", worker_id=order_num)
+                    
+                    # Update status file
+                    update_status_file(True, success_count, failure_count)
+                    
+                    # If process failed with exit code 5 (all product URLs failed), stop all workers immediately
                     if return_code == 5:
                         print(f"[CRITICAL] Order {order_num} failed - all product URLs failed. Stopping all workers immediately...")
                         write_to_log(f"[CRITICAL] Order {order_num} failed - all product URLs failed. Stopping all workers immediately...", worker_id=order_num)

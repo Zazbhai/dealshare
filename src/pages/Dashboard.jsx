@@ -18,13 +18,19 @@ function Dashboard() {
     landmark: '',
     totalOrders: '1',
     maxParallelWindows: '1',
+    retryOrders: false, // Toggle to retry failed orders once
     primaryProductUrl: '',
     secondaryProductUrl: '',
     thirdProductUrl: '',
+    primaryProductQuantity: '1',
+    secondaryProductQuantity: '1',
+    thirdProductQuantity: '1',
     latitude: '26.994880',
     longitude: '75.774836',
     currentLocation: 'default',
-    selectLocation: true // Toggle for location selection step
+    selectLocation: true, // Toggle for location selection step
+    searchInput: 'chinu juice center', // Search query for location
+    locationText: 'Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India' // Exact location text to select
   })
   const logsEndRef = useRef(null)
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -43,19 +49,38 @@ function Dashboard() {
 
   useEffect(() => {
     loadInitialData()
-    loadSavedOrderDetails()
-    loadProductUrls()
+    loadAllDashboardSettings()
     // Check initial automation status to sync state
     checkInitialStatus()
   }, [user])
 
-  const loadProductUrls = () => {
+  const loadAllDashboardSettings = () => {
     if (user) {
       setFormData(prev => ({
         ...prev,
-        primaryProductUrl: user.primary_product_url || '',
-        secondaryProductUrl: user.secondary_product_url || '',
-        thirdProductUrl: user.third_product_url || ''
+        // Order details
+        name: user.name || prev.name || '',
+        houseFlatNo: user.house_flat_no || prev.houseFlatNo || '',
+        landmark: user.landmark || prev.landmark || '',
+        // Automation settings
+        totalOrders: user.total_orders?.toString() || prev.totalOrders || '1',
+        maxParallelWindows: user.max_parallel_windows?.toString() || prev.maxParallelWindows || '1',
+        retryOrders: user.retry_orders !== undefined ? user.retry_orders : prev.retryOrders || false,
+        // Product URLs
+        primaryProductUrl: user.primary_product_url || prev.primaryProductUrl || '',
+        secondaryProductUrl: user.secondary_product_url || prev.secondaryProductUrl || '',
+        thirdProductUrl: user.third_product_url || prev.thirdProductUrl || '',
+        // Product Quantities
+        primaryProductQuantity: user.primary_product_quantity?.toString() || prev.primaryProductQuantity || '1',
+        secondaryProductQuantity: user.secondary_product_quantity?.toString() || prev.secondaryProductQuantity || '1',
+        thirdProductQuantity: user.third_product_quantity?.toString() || prev.thirdProductQuantity || '1',
+        // Location settings
+        latitude: user.latitude || prev.latitude || '26.994880',
+        longitude: user.longitude || prev.longitude || '75.774836',
+        currentLocation: user.current_location || prev.currentLocation || 'default',
+        selectLocation: user.select_location_enabled !== undefined ? user.select_location_enabled : prev.selectLocation !== undefined ? prev.selectLocation : true,
+        searchInput: user.search_input || prev.searchInput || 'chinu juice center',
+        locationText: user.location_text || prev.locationText || 'Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India'
       }))
     }
   }
@@ -78,64 +103,45 @@ function Dashboard() {
     }
   }
 
-  // Save order details to localStorage whenever they change (only when not in edit mode)
-  useEffect(() => {
-    if (!isEditMode && formData.name && formData.houseFlatNo && formData.landmark) {
-      const orderDetails = {
-        name: formData.name,
-        houseFlatNo: formData.houseFlatNo,
-        landmark: formData.landmark
-      }
-      localStorage.setItem('savedOrderDetails', JSON.stringify(orderDetails))
-    }
-  }, [formData.name, formData.houseFlatNo, formData.landmark, isEditMode])
-
-  const loadSavedOrderDetails = () => {
-    try {
-      const saved = localStorage.getItem('savedOrderDetails')
-      if (saved) {
-        const orderDetails = JSON.parse(saved)
-        setFormData(prev => ({
-          ...prev,
-          name: orderDetails.name || '',
-          houseFlatNo: orderDetails.houseFlatNo || '',
-          landmark: orderDetails.landmark || ''
-        }))
-      }
-    } catch (error) {
-      console.error('Failed to load saved order details:', error)
-    }
-  }
-
   const handleToggleEditMode = async () => {
     if (isEditMode) {
-      // Save when exiting edit mode
-      const orderDetails = {
-        name: formData.name,
-        houseFlatNo: formData.houseFlatNo,
-        landmark: formData.landmark
-      }
-      localStorage.setItem('savedOrderDetails', JSON.stringify(orderDetails))
-
-      // Save product URLs to user settings
+      // Save all dashboard settings when exiting edit mode
       try {
-        const result = await updateSettings({
+        const settingsToSave = {
+          // Order details
+          name: formData.name,
+          house_flat_no: formData.houseFlatNo,
+          landmark: formData.landmark,
+          // Automation settings
+          total_orders: parseInt(formData.totalOrders) || 1,
+          max_parallel_windows: parseInt(formData.maxParallelWindows) || 1,
+          retry_orders: formData.retryOrders || false,
+          // Product URLs
           primary_product_url: formData.primaryProductUrl,
           secondary_product_url: formData.secondaryProductUrl,
-          third_product_url: formData.thirdProductUrl
-        })
+          third_product_url: formData.thirdProductUrl,
+          // Product Quantities
+          primary_product_quantity: parseInt(formData.primaryProductQuantity) || 1,
+          secondary_product_quantity: parseInt(formData.secondaryProductQuantity) || 1,
+          third_product_quantity: parseInt(formData.thirdProductQuantity) || 1,
+          // Location settings
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+          current_location: formData.currentLocation,
+          select_location_enabled: formData.selectLocation !== undefined ? formData.selectLocation : true,
+          search_input: formData.searchInput,
+          location_text: formData.locationText
+        }
+        
+        const result = await updateSettings(settingsToSave)
         if (result.success) {
-          await updateUserSettings({
-            primary_product_url: formData.primaryProductUrl,
-            secondary_product_url: formData.secondaryProductUrl,
-            third_product_url: formData.thirdProductUrl
-          })
-          addLog('success', '✅ Order details and product URLs saved')
+          await updateUserSettings(settingsToSave)
+          addLog('success', '✅ All dashboard settings saved successfully')
         } else {
-          addLog('error', `❌ Failed to save product URLs: ${result.error}`)
+          addLog('error', `❌ Failed to save settings: ${result.error}`)
         }
       } catch (error) {
-        addLog('error', `❌ Error saving product URLs: ${error.message}`)
+        addLog('error', `❌ Error saving settings: ${error.message}`)
       }
     }
     setIsEditMode(!isEditMode)
@@ -730,6 +736,37 @@ function Dashboard() {
                   />
                   <p className="text-xs text-gray-500 mt-1">Maximum number of browser windows to open at the same time</p>
                 </div>
+
+                {/* Retry Orders Toggle */}
+                <div className="col-span-1 sm:col-span-2">
+                  <div className="p-4 bg-black/30 rounded-lg border border-purple-500/20">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="flex items-center gap-2 text-sm sm:text-base font-semibold text-gray-300">
+                        <RefreshCw className="w-5 h-5 text-purple-400" />
+                        Retry Orders
+                      </label>
+                      <button
+                        onClick={() => handleInputChange('retryOrders', !formData.retryOrders)}
+                        disabled={isRunning}
+                        className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed ${
+                          formData.retryOrders ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-600'
+                        }`}
+                        type="button"
+                      >
+                        <span
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                            formData.retryOrders ? 'translate-x-8' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      {formData.retryOrders
+                        ? 'Failed orders will be retried once automatically'
+                        : 'Failed orders will not be retried'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </motion.div>
 
@@ -789,14 +826,25 @@ function Dashboard() {
                       <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                       Primary Product URL <span className="text-red-400">*</span>
                     </label>
-                    <input
-                      type="text"
-                      value={formData.primaryProductUrl}
-                      onChange={(e) => handleInputChange('primaryProductUrl', e.target.value)}
-                      placeholder="https://www.dealshare.in/pname/..."
-                      disabled={isRunning || !isEditMode}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={formData.primaryProductUrl}
+                        onChange={(e) => handleInputChange('primaryProductUrl', e.target.value)}
+                        placeholder="https://www.dealshare.in/pname/..."
+                        disabled={isRunning || !isEditMode}
+                        className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
+                      />
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.primaryProductQuantity}
+                        onChange={(e) => handleInputChange('primaryProductQuantity', e.target.value)}
+                        placeholder="Qty"
+                        disabled={isRunning || !isEditMode}
+                        className="w-20 px-3 py-2.5 sm:py-3 bg-black/40 border border-blue-500/50 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all text-center"
+                      />
+                    </div>
                   </motion.div>
 
                   {/* Secondary Product URL */}
@@ -812,14 +860,25 @@ function Dashboard() {
                       <div className="w-2 h-2 rounded-full bg-purple-400"></div>
                       Secondary Product URL <span className="text-gray-500 text-xs">(Optional)</span>
                     </label>
-                    <input
-                      type="text"
-                      value={formData.secondaryProductUrl}
-                      onChange={(e) => handleInputChange('secondaryProductUrl', e.target.value)}
-                      placeholder="https://www.dealshare.in/pname/..."
-                      disabled={isRunning || !isEditMode}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={formData.secondaryProductUrl}
+                        onChange={(e) => handleInputChange('secondaryProductUrl', e.target.value)}
+                        placeholder="https://www.dealshare.in/pname/..."
+                        disabled={isRunning || !isEditMode}
+                        className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
+                      />
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.secondaryProductQuantity}
+                        onChange={(e) => handleInputChange('secondaryProductQuantity', e.target.value)}
+                        placeholder="Qty"
+                        disabled={isRunning || !isEditMode}
+                        className="w-20 px-3 py-2.5 sm:py-3 bg-black/40 border border-purple-500/50 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all text-center"
+                      />
+                    </div>
                   </motion.div>
 
                   {/* Third Product URL */}
@@ -835,14 +894,25 @@ function Dashboard() {
                       <div className="w-2 h-2 rounded-full bg-pink-400"></div>
                       Third Product URL <span className="text-gray-500 text-xs">(Optional)</span>
                     </label>
-                    <input
-                      type="text"
-                      value={formData.thirdProductUrl}
-                      onChange={(e) => handleInputChange('thirdProductUrl', e.target.value)}
-                      placeholder="https://www.dealshare.in/pname/..."
-                      disabled={isRunning || !isEditMode}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={formData.thirdProductUrl}
+                        onChange={(e) => handleInputChange('thirdProductUrl', e.target.value)}
+                        placeholder="https://www.dealshare.in/pname/..."
+                        disabled={isRunning || !isEditMode}
+                        className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
+                      />
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.thirdProductQuantity}
+                        onChange={(e) => handleInputChange('thirdProductQuantity', e.target.value)}
+                        placeholder="Qty"
+                        disabled={isRunning || !isEditMode}
+                        className="w-20 px-3 py-2.5 sm:py-3 bg-black/40 border border-pink-500/50 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all text-center"
+                      />
+                    </div>
                   </motion.div>
 
                   {/* Info Text */}
@@ -963,6 +1033,47 @@ function Dashboard() {
                         disabled={isRunning}
                         className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                       />
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Search Input and Location Text - Only visible when Select Location toggle is ON */}
+                {formData.selectLocation && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4 mt-4 pt-4 border-t border-gray-700/50"
+                  >
+                    <div>
+                      <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                        <Navigation2 className="w-4 h-4 flex-shrink-0 text-green-400" />
+                        Search Input
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.searchInput}
+                        onChange={(e) => handleInputChange('searchInput', e.target.value)}
+                        placeholder="chinu juice center"
+                        disabled={isRunning}
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-green-500/30 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Search query to find location in Google search</p>
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                        <Navigation2 className="w-4 h-4 flex-shrink-0 text-green-400" />
+                        Location Text
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.locationText}
+                        onChange={(e) => handleInputChange('locationText', e.target.value)}
+                        placeholder="Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India"
+                        disabled={isRunning}
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-green-500/30 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Exact location text that appears in search results to select</p>
                     </div>
                   </motion.div>
                 )}

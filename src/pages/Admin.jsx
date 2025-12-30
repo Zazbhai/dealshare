@@ -34,10 +34,10 @@ function Admin() {
     username: '',
     password: '',
     role: 'user',
-    api_url: 'https://api.temporasms.com/stubs/handler_api.php',
     api_key: ''
   })
   const [globalSettings, setGlobalSettings] = useState({
+    api_url: 'https://api.temporasms.com/stubs/handler_api.php',
     country_code: '22',
     operator: '1',
     service: 'pfk',
@@ -61,6 +61,7 @@ function Admin() {
       const result = await getGlobalSettings()
       if (result.success) {
         setGlobalSettings({
+          api_url: result.settings.api_url || 'https://api.temporasms.com/stubs/handler_api.php',
           country_code: result.settings.country_code || '22',
           operator: result.settings.operator || '1',
           service: result.settings.service || 'pfk',
@@ -150,7 +151,7 @@ function Admin() {
       if (result.success) {
         setMessage({ type: 'success', text: 'User created successfully!' })
         setShowCreateUser(false)
-        setNewUser({ username: '', password: '', role: 'user', country_code: '22', operator: '1', service: 'pfk' })
+        setNewUser({ username: '', password: '', role: 'user', api_key: '' })
         loadUsers()
       } else {
         setMessage({ type: 'error', text: result.error || 'Failed to create user' })
@@ -276,6 +277,20 @@ function Admin() {
           </div>
 
           <form onSubmit={handleUpdateGlobalSettings} className="space-y-4">
+            {/* API URL - Full width */}
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                API URL
+              </label>
+              <input
+                type="url"
+                value={globalSettings.api_url}
+                onChange={(e) => setGlobalSettings({ ...globalSettings, api_url: e.target.value })}
+                className="w-full px-3 sm:px-4 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white text-sm sm:text-base"
+                placeholder="https://api.temporasms.com/stubs/handler_api.php"
+              />
+            </div>
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               <div>
                 <label className="block text-xs sm:text-sm font-semibold text-gray-300 mb-2">
@@ -402,16 +417,6 @@ function Admin() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-300 mb-1">API URL</label>
-                    <input
-                      type="url"
-                      value={newUser.api_url}
-                      onChange={(e) => setNewUser({ ...newUser, api_url: e.target.value })}
-                      className="w-full px-3 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white text-sm"
-                      placeholder="https://api.temporasms.com/stubs/handler_api.php"
-                    />
-                  </div>
-                  <div>
                     <label className="block text-xs sm:text-sm font-semibold text-gray-300 mb-1">API Key</label>
                     <input
                       type="text"
@@ -490,11 +495,11 @@ function Admin() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
             <div>
               <span className="text-gray-400">API Endpoint:</span>
-              <span className="ml-2 text-gray-300">http://localhost:5000</span>
+              <span className="ml-2 text-gray-300">{import.meta.env.VITE_BACKEND_URL || window.location.origin.replace(':3000', ':5000')}</span>
             </div>
             <div>
               <span className="text-gray-400">Frontend:</span>
-              <span className="ml-2 text-gray-300">http://localhost:3000</span>
+              <span className="ml-2 text-gray-300">{window.location.origin}</span>
             </div>
             <div>
               <span className="text-gray-400">Auto-refresh:</span>

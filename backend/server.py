@@ -134,8 +134,28 @@ def update_settings():
         user_id = request.current_user['_id']
         
         
-        # Users can update API settings and product URLs
-        allowed_fields = ['api_url', 'api_key', 'primary_product_url', 'secondary_product_url', 'third_product_url']
+        # Users can update API settings, dashboard settings, product URLs, location settings, etc.
+        allowed_fields = [
+            'api_key',
+            'name',
+            'house_flat_no',
+            'landmark',
+            'total_orders',
+            'max_parallel_windows',
+            'retry_orders',
+            'primary_product_url',
+            'secondary_product_url',
+            'third_product_url',
+            'primary_product_quantity',
+            'secondary_product_quantity',
+            'third_product_quantity',
+            'latitude',
+            'longitude',
+            'current_location',
+            'select_location_enabled',
+            'search_input',
+            'location_text'
+        ]
         settings = {k: v for k, v in data.items() if k in allowed_fields}
         
         # CRITICAL: Strip whitespace from API key when saving
@@ -204,17 +224,26 @@ def get_user_api_config():
         user = request.current_user
         
         api_key_raw = user.get('api_key', '') if user else ''
-        api_url = user.get('api_url', 'https://api.temporasms.com/stubs/handler_api.php') if user else 'https://api.temporasms.com/stubs/handler_api.php'
         
         # CRITICAL: Strip whitespace from API key (common issue)
         api_key = api_key_raw.strip() if api_key_raw else ''
         
+        # Debug: Print user info (without sensitive data)
+        print(f"[DEBUG] get_user_api_config - User: {user.get('username', 'unknown') if user else 'None'}")
+        print(f"[DEBUG] get_user_api_config - API key present: {bool(api_key)}")
+        print(f"[DEBUG] get_user_api_config - API key length: {len(api_key) if api_key else 0}")
         
         # Debug API key (masked) with detailed info
         if api_key:
             masked = api_key[:4] + '*' * (len(api_key) - 8) + api_key[-4:] if len(api_key) > 8 else '****'
+            print(f"[DEBUG] get_user_api_config - API key (masked): {masked}")
+        else:
+            print(f"[DEBUG] get_user_api_config - WARNING: API key is empty!")
         
         global_settings = GlobalSettings.get_settings()
+        api_url = global_settings.get('api_url', 'https://api.temporasms.com/stubs/handler_api.php')
+        print(f"[DEBUG] get_user_api_config - API URL from global settings: {api_url}")
+        
         config = {
             'api_key': api_key,  # Use stripped version
             'api_url': api_url,
@@ -230,12 +259,13 @@ def get_user_api_config():
         traceback.print_exc()
         user = request.current_user
         api_key = user.get('api_key', '') if user else ''
+        global_settings = GlobalSettings.get_settings()
         return {
             'api_key': api_key,
-            'api_url': user.get('api_url', 'https://api.temporasms.com/stubs/handler_api.php') if user else 'https://api.temporasms.com/stubs/handler_api.php',
-            'country': '22',
-            'operator': '1',
-            'service': 'pfk'
+            'api_url': global_settings.get('api_url', 'https://api.temporasms.com/stubs/handler_api.php'),
+            'country': global_settings.get('country_code', '22'),
+            'operator': global_settings.get('operator', '1'),
+            'service': global_settings.get('service', 'pfk')
         }
 
 @app.route('/api/balance', methods=['GET'])
@@ -244,13 +274,19 @@ def balance():
     try:
         config = get_user_api_config()
         api_key = config.get('api_key', '') if config else ''
+        api_url = config.get('api_url', '') if config else ''
+        
+        print(f"[DEBUG] balance endpoint - API key present: {bool(api_key)}")
+        print(f"[DEBUG] balance endpoint - API URL: {api_url}")
         
         if not config or not api_key or not api_key.strip():
+            print(f"[DEBUG] balance endpoint - API key validation failed")
             return jsonify({
                 "success": False,
                 "error": "API key not configured. Please set your API key in Settings."
             }), 400
         
+        print(f"[DEBUG] balance endpoint - Calling get_balance with API key length: {len(api_key)}")
         raw = get_balance(config['api_key'], config['api_url'])
         
         parsed = parse_balance(raw)
@@ -710,9 +746,15 @@ def automation_start():
         primary_product_url = data.get('primary_product_url', '')
         secondary_product_url = data.get('secondary_product_url', '')
         third_product_url = data.get('third_product_url', '')
+        primary_product_quantity = data.get('primary_product_quantity', '1')
+        secondary_product_quantity = data.get('secondary_product_quantity', '1')
+        third_product_quantity = data.get('third_product_quantity', '1')
+        retry_orders = data.get('retry_orders', False)
         latitude = data.get('latitude', '26.994880')
         longitude = data.get('longitude', '75.774836')
         select_location = data.get('select_location', True)
+        search_input = data.get('search_input', 'chinu juice center')
+        location_text = data.get('location_text', 'Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India')
         
         if not name or not house_flat_no or not landmark:
             return jsonify({
@@ -811,9 +853,15 @@ def automation_start():
         env['PRIMARY_PRODUCT_URL'] = primary_product_url
         env['SECONDARY_PRODUCT_URL'] = secondary_product_url
         env['THIRD_PRODUCT_URL'] = third_product_url
+        env['PRIMARY_PRODUCT_QUANTITY'] = str(primary_product_quantity)
+        env['SECONDARY_PRODUCT_QUANTITY'] = str(secondary_product_quantity)
+        env['THIRD_PRODUCT_QUANTITY'] = str(third_product_quantity)
+        env['RETRY_ORDERS'] = '1' if retry_orders else '0'
         env['LATITUDE'] = str(latitude)
         env['LONGITUDE'] = str(longitude)
         env['SELECT_LOCATION'] = '1' if select_location else '0'
+        env['SEARCH_INPUT'] = search_input
+        env['LOCATION_TEXT'] = location_text
         
         # Start automation worker that will manage parallel execution
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -983,7 +1031,6 @@ def create_user_admin():
         username = data.get('username', '').strip()
         password = data.get('password', '')
         role = data.get('role', 'user')
-        api_url = data.get('api_url', 'https://api.temporasms.com/stubs/handler_api.php')
         api_key = data.get('api_key', '')
         
         if not username or not password:
@@ -996,7 +1043,6 @@ def create_user_admin():
             username=username,
             password=password,
             role=role,
-            api_url=api_url,
             api_key=api_key
         )
         
@@ -1044,10 +1090,11 @@ def get_global_settings_user():
 @app.route('/api/admin/global-settings', methods=['PUT'])
 @require_admin
 def update_global_settings():
-    """Update global settings (admin only) - country_code, operator, service, price"""
+    """Update global settings (admin only) - api_url, country_code, operator, service, price"""
     try:
         data = request.json or {}
         
+        api_url = data.get('api_url')
         country_code = data.get('country_code')
         operator = data.get('operator')
         service = data.get('service')
@@ -1055,6 +1102,8 @@ def update_global_settings():
         
         # Only update fields that are provided
         update_data = {}
+        if api_url is not None:
+            update_data['api_url'] = api_url
         if country_code is not None:
             update_data['country_code'] = country_code
         if operator is not None:
@@ -1077,6 +1126,7 @@ def update_global_settings():
             }), 400
         
         result = GlobalSettings.update_settings(
+            api_url=api_url,
             country_code=country_code,
             operator=operator,
             service=service,
@@ -1122,4 +1172,6 @@ def delete_user(user_id):
         }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    host = os.environ.get('BACKEND_HOST', '0.0.0.0')
+    port = int(os.environ.get('BACKEND_PORT', '5000'))
+    app.run(debug=True, host=host, port=port)

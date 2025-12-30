@@ -7,7 +7,7 @@ function ConnectionDebugger() {
   const [status, setStatus] = useState('checking')
   const [details, setDetails] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [backendUrl, setBackendUrl] = useState('http://localhost:5000')
+  const [backendUrl, setBackendUrl] = useState(import.meta.env.VITE_BACKEND_URL || window.location.origin.replace(':3000', ':5000') || 'http://localhost:5000')
 
   const checkConnection = async () => {
     setLoading(true)
@@ -181,7 +181,7 @@ function ConnectionDebugger() {
             value={backendUrl}
             onChange={(e) => setBackendUrl(e.target.value)}
             className="flex-1 px-3 py-2 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white text-sm"
-            placeholder="http://localhost:5000"
+            placeholder={import.meta.env.VITE_BACKEND_URL || window.location.origin.replace(':3000', ':5000') || 'http://localhost:5000'}
           />
           <button
             onClick={checkConnection}

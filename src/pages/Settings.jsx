@@ -2,21 +2,19 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { updateSettings } from '../services/auth'
-import { Globe, Key, Save, CheckCircle, XCircle } from 'lucide-react'
+import { Key, Save, CheckCircle, XCircle } from 'lucide-react'
 
 function Settings() {
   const { user, updateSettings: updateUserSettings } = useAuth()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
   const [formData, setFormData] = useState({
-    api_url: '',
     api_key: ''
   })
 
   useEffect(() => {
     if (user) {
       setFormData({
-        api_url: user.api_url || 'https://api.temporasms.com/stubs/handler_api.php',
         api_key: user.api_key || ''
       })
     }
@@ -29,14 +27,12 @@ function Settings() {
 
     try {
       const result = await updateSettings({
-        api_url: formData.api_url,
         api_key: formData.api_key
       })
 
       if (result.success) {
         // Update user context
         await updateUserSettings({
-          api_url: formData.api_url,
           api_key: formData.api_key
         })
         setMessage({ type: 'success', text: 'Settings updated successfully!' })
@@ -96,22 +92,6 @@ function Settings() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* API URL */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">
-                <Globe className="w-4 h-4" />
-                API URL
-              </label>
-              <input
-                type="url"
-                value={formData.api_url}
-                onChange={(e) => handleChange('api_url', e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-500 text-sm sm:text-base"
-                placeholder="https://api.temporasms.com/stubs/handler_api.php"
-              />
-            </div>
-
             {/* API Key */}
             <div>
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-300 mb-2">

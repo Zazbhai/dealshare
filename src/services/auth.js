@@ -43,7 +43,7 @@ export const login = async (username, password) => {
     
     // Provide more detailed error messages
     if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
-      errorMessage = 'Cannot connect to backend server. Make sure the server is running on http://localhost:5000'
+      errorMessage = `Cannot connect to backend server. Make sure the server is running on ${import.meta.env.VITE_BACKEND_URL || window.location.origin.replace(':3000', ':5000')}`
     } else if (error.code === 'ECONNABORTED' || error.timeout) {
       errorMessage = 'Request timeout - the server is taking too long to respond'
     } else if (error.response?.status === 0) {

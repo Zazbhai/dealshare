@@ -64,8 +64,14 @@ def robust_click(page, selector, method="selector"):
 # =========================
 # LOCATION
 # =========================
-def select_location(page):
+def select_location(page, search_query=None, location_text_to_select=None):
     """Handles location selection flow"""
+    
+    # Get values from environment variables if not provided
+    if search_query is None:
+        search_query = os.environ.get('SEARCH_INPUT', 'chinu juice center')
+    if location_text_to_select is None:
+        location_text_to_select = os.environ.get('LOCATION_TEXT', 'Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India')
 
     # Click "Type Manually"
     page.wait_for_selector("button:has-text('Type Manually')", timeout=7000)
@@ -74,12 +80,13 @@ def select_location(page):
     # Search location
     search_input = page.locator("input#google-search")
     search_input.wait_for()
-    search_input.fill("chinu juice center")
+    search_input.fill(search_query)
+    print(f"🔍 Searching for location: {search_query}")
 
     # Select exact location
-    location_text = "Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India"
-    page.wait_for_selector(f"text={location_text}", timeout=7000)
-    page.click(f"text={location_text}")
+    print(f"📍 Selecting location: {location_text_to_select}")
+    page.wait_for_selector(f"text={location_text_to_select}", timeout=7000)
+    page.click(f"text={location_text_to_select}")
 
     # Confirm delivery
     page.wait_for_selector("button:has-text('Confirm Delivery Location')", timeout=7000)
@@ -282,9 +289,9 @@ def click_add_button(page):
     
     time.sleep(1)
 
-def add_product_and_check_cart(page, product_url):
+def add_product_and_check_cart(page, product_url, quantity=1):
     """
-    Add product to cart and check for removal notice and OOS
+    Add product to cart with specified quantity and check for removal notice and OOS
     Returns True if cart is ready to proceed, False if needs retry with different product
     """
     print(f"🛒 Opening product page: {product_url}")
@@ -317,50 +324,73 @@ def add_product_and_check_cart(page, product_url):
         print(f"⚠️ Failed to click Add button (likely OOS or page changed): {e}")
         return False
 
-    time.sleep(3)
-
-    # -----------------------------
-    # CART CHECK
-    # -----------------------------
-    print("🛍️ Opening cart...")
-    try:
-        page.locator("img[src*='bag']").first.click(force=True)
-        print("✅ Clicked bag icon")
-    except Exception as e:
-        print(f"⚠️ Failed to click bag icon: {e}")
-        return False
-        
     time.sleep(2)
 
-    # Check for "Remove Items & Proceed" text
-    remove_text_options = [
-        "Remove Items & Proceed",
-        "Remove Items",
-        "Remove Item & Proceed",
-        "Remove Item"
-    ]
-    
-    for text in remove_text_options:
-        if page.locator(f"text={text}").count() > 0:
-            if page.locator(f"text={text}").first.is_visible():
-                print(f"⚠️ Found '{text}' - Product needs to be removed (Delivery not available)")
+    # -----------------------------
+    # QUANTITY ADJUSTMENT
+    # -----------------------------
+    if quantity > 1:
+        print(f"🔢 Adjusting quantity to {quantity}...")
+        
+        # Click plus button (quantity - 1) times since we already have 1 item
+        plus_icon = page.locator("img[alt='plus'][src*='plus']")
+        
+        for i in range(quantity - 1):
+            try:
+                # Wait for plus button to be visible
+                plus_icon.wait_for(state="visible", timeout=5000)
                 
-                # Try to cleanly remove it before failing, so next product has clean slate? 
-                # Actually, better to just fail and let next product flow handle its own state, 
-                # but clicking remove is safer to clear the bad state.
+                # Try multiple click methods
+                success = False
+                
+                # Method 1: Regular click
                 try:
-                    remove_btn = page.locator(f"text={text}").first
-                    if robust_click(page, remove_btn, method="locator"):
-                        print("✅ Clicked remove button to clear bad state")
-                        time.sleep(1)
+                    plus_icon.first.click(timeout=3000)
+                    success = True
                 except:
                     pass
                 
-                return False  # Return False because this product failed
+                # Method 2: Force click
+                if not success:
+                    try:
+                        plus_icon.first.click(force=True)
+                        success = True
+                    except:
+                        pass
+                
+                # Method 3: JS click
+                if not success:
+                    try:
+                        page.evaluate("(el) => el.click()", plus_icon.first)
+                        success = True
+                    except:
+                        pass
+                
+                if success:
+                    print(f"  ➕ Clicked plus button (iteration {i+1}/{quantity-1})")
+                    time.sleep(0.5)  # Small delay between clicks
+                else:
+                    print(f"  ⚠️ Failed to click plus button on iteration {i+1}")
+                    
+            except Exception as e:
+                print(f"  ⚠️ Error clicking plus button: {e}")
+                break
+        
+        # Verify quantity
+        time.sleep(1)
+        try:
+            quantity_text = page.locator("span.AddButton_quantity-text__enpVI").first
+            actual_quantity = quantity_text.text_content().strip()
             
-    return True  # Return True if no removal needed
+            if actual_quantity == str(quantity):
+                print(f"✅ Quantity verified: {actual_quantity} (expected: {quantity})")
+            else:
+                print(f"⚠️ Quantity mismatch: got {actual_quantity}, expected {quantity}")
+                print("   Continuing anyway...")
+        except Exception as e:
+            print(f"⚠️ Could not verify quantity: {e}")
 
-
+    time.sleep(1)
 
 # =========================
 # MAIN
@@ -387,9 +417,17 @@ def main():
         # LOCATION
         # -----------------------------
         if should_select_location:
+            # Get location search settings from environment
+            search_input = os.environ.get('SEARCH_INPUT', 'chinu juice center')
+            location_text = os.environ.get('LOCATION_TEXT', 'Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India')
+            
+            print(f"📍 Location selection enabled")
+            print(f"   Search query: {search_input}")
+            print(f"   Location text: {location_text}")
+            
             try:
                 print("➡ Trying normal location flow...")
-                select_location(page)
+                select_location(page, search_input, location_text)
             except TimeoutError:
                 print("⚠ Location selection failed, retrying...")
 
@@ -398,7 +436,7 @@ def main():
                 page.click("p.Address_addressBold__GlDKW")
 
                 time.sleep(1)
-                select_location(page)
+                select_location(page, search_input, location_text)
         else:
             print("⏭️ Location selection step skipped (disabled in settings)")
 
@@ -494,7 +532,7 @@ def main():
             cancel_number(request_id, api_key, api_url)
             print("❌ Number cancelled due to OTP timeout")
             browser.close()
-            sys.exit(1)  # Exit with failure code
+            sys.exit(1)  # Exit immideatly with failure code
         
         # OTP received - enter it
         print(f"✅ Got OTP: {otp}")
@@ -578,6 +616,9 @@ def main():
         primary_product_url = os.environ.get('PRIMARY_PRODUCT_URL', '')
         secondary_product_url = os.environ.get('SECONDARY_PRODUCT_URL', '')
         third_product_url = os.environ.get('THIRD_PRODUCT_URL', '')
+        primary_product_quantity = int(os.environ.get('PRIMARY_PRODUCT_QUANTITY', '1'))
+        secondary_product_quantity = int(os.environ.get('SECONDARY_PRODUCT_QUANTITY', '1'))
+        third_product_quantity = int(os.environ.get('THIRD_PRODUCT_QUANTITY', '1'))
         
         # Primary URL is mandatory - validate it exists
         if not primary_product_url or not primary_product_url.strip():
@@ -585,24 +626,29 @@ def main():
             browser.close()
             sys.exit(1)  # Exit with generic error code
         
-        # Build URL list: Primary → Secondary → Third
+        # Build URL and quantity lists: Primary → Secondary → Third
         product_urls = [primary_product_url.strip()]
+        product_quantities = [primary_product_quantity]
+        
         if secondary_product_url and secondary_product_url.strip():
             product_urls.append(secondary_product_url.strip())
+            product_quantities.append(secondary_product_quantity)
         if third_product_url and third_product_url.strip():
             product_urls.append(third_product_url.strip())
+            product_quantities.append(third_product_quantity)
         
         print(f"📋 Found {len(product_urls)} product URLs to try")
+        print(f"🔢 Quantities: {product_quantities}")
         
         cart_success = False
         
-        for i, url in enumerate(product_urls):
-            print(f"🔄 [Attempt {i+1}/{len(product_urls)}] Trying product: {url}")
+        for i, (url, quantity) in enumerate(zip(product_urls, product_quantities)):
+            print(f"🔄 [Attempt {i+1}/{len(product_urls)}] Trying product: {url} (quantity: {quantity})")
             
             try:
-                # Use the helper function which now includes OOS checks
-                if add_product_and_check_cart(page, url):
-                    print(f"✅ Product secured from URL #{i+1}")
+                # Use the helper function which now includes OOS checks and quantity
+                if add_product_and_check_cart(page, url, quantity):
+                    print(f"✅ Product secured from URL #{i+1} with quantity {quantity}")
                     cart_success = True
                     break
                 else:
@@ -630,23 +676,41 @@ def main():
         # -----------------------------
         print("📝 Filling address details...")
         
+        # Get order details from environment variables
+        automation_name = os.environ.get('AUTOMATION_NAME', '')
+        automation_house_flat = os.environ.get('AUTOMATION_HOUSE_FLAT', '')
+        automation_landmark = os.environ.get('AUTOMATION_LANDMARK', '')
+        
+        print(f"[DEBUG] Order details from environment:")
+        print(f"[DEBUG]   Name: {automation_name}")
+        print(f"[DEBUG]   House/Flat: {automation_house_flat}")
+        print(f"[DEBUG]   Landmark: {automation_landmark}")
+        
+        if not automation_name or not automation_house_flat or not automation_landmark:
+            print("❌ Order details (name, house/flat, landmark) are required but not configured")
+            browser.close()
+            sys.exit(1)
+        
         # Wait for form to be visible
         page.wait_for_selector("input[name='userName']", state="visible", timeout=10000)
         time.sleep(1)
 
         # Fill name
         name_input = page.locator("input[name='userName']")
-        name_input.fill("Zaza Yagami")
+        name_input.fill(automation_name)
+        print(f"✅ Filled name: {automation_name}")
         time.sleep(0.5)
 
         # Fill flat
         flat_input = page.locator("input[name='flat']")
-        flat_input.fill("Ward 32")
+        flat_input.fill(automation_house_flat)
+        print(f"✅ Filled house/flat: {automation_house_flat}")
         time.sleep(0.5)
 
         # Fill landmark
         landmark_input = page.locator("input[name='landMark']")
-        landmark_input.fill("Chinu Juice Center")
+        landmark_input.fill(automation_landmark)
+        print(f"✅ Filled landmark: {automation_landmark}")
         time.sleep(1)
 
         # Save address with robust clicking

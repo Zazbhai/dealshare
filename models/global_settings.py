@@ -33,6 +33,7 @@ try:
     # Initialize default global settings if they don't exist
     if settings_collection.count_documents({}) == 0:
         default_settings = {
+            'api_url': 'https://api.temporasms.com/stubs/handler_api.php',
             'country_code': '22',
             'operator': '1',
             'service': 'pfk',
@@ -56,6 +57,7 @@ class GlobalSettings:
         if not _db_connected or settings_collection is None:
             # Return defaults if DB not connected
             return {
+                'api_url': 'https://api.temporasms.com/stubs/handler_api.php',
                 'country_code': '22',
                 'operator': '1',
                 'service': 'pfk',
@@ -65,12 +67,14 @@ class GlobalSettings:
         settings = settings_collection.find_one({})
         if settings:
             return {
+                'api_url': settings.get('api_url', 'https://api.temporasms.com/stubs/handler_api.php'),
                 'country_code': settings.get('country_code', '22'),
                 'operator': settings.get('operator', '1'),
                 'service': settings.get('service', 'pfk'),
                 'price': settings.get('price', 0.0)
             }
         return {
+            'api_url': 'https://api.temporasms.com/stubs/handler_api.php',
             'country_code': '22',
             'operator': '1',
             'service': 'pfk',
@@ -78,7 +82,7 @@ class GlobalSettings:
         }
     
     @staticmethod
-    def update_settings(country_code: str = None, operator: str = None, service: str = None, price: float = None) -> Dict[str, Any]:
+    def update_settings(api_url: str = None, country_code: str = None, operator: str = None, service: str = None, price: float = None) -> Dict[str, Any]:
         """Update global settings"""
         try:
             if not _db_connected or settings_collection is None:
@@ -89,6 +93,8 @@ class GlobalSettings:
             
             update_data = {'updated_at': datetime.utcnow()}
             
+            if api_url is not None:
+                update_data['api_url'] = api_url
             if country_code is not None:
                 update_data['country_code'] = country_code
             if operator is not None:
@@ -101,6 +107,7 @@ class GlobalSettings:
             # If no settings exist, create them
             if settings_collection.count_documents({}) == 0:
                 default_settings = {
+                    'api_url': api_url or 'https://api.temporasms.com/stubs/handler_api.php',
                     'country_code': country_code or '22',
                     'operator': operator or '1',
                     'service': service or 'pfk',

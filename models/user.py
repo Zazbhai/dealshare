@@ -69,7 +69,7 @@ class User:
     
     @staticmethod
     def create_user(username: str, password: str, role: str = 'user', 
-                   api_url: str = '', api_key: str = '') -> Dict[str, Any]:
+                   api_key: str = '') -> Dict[str, Any]:
         """Create a new user"""
         conn_check = User._check_connection()
         if conn_check:
@@ -86,7 +86,6 @@ class User:
             'username': username,
             'password': hashed_password.decode('utf-8'),
             'role': role,
-            'api_url': api_url,
             'api_key': api_key,
             'created_at': datetime.utcnow(),
             'updated_at': datetime.utcnow()

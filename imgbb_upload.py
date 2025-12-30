@@ -5,7 +5,7 @@ import base64
 import requests
 import os
 
-IMGBB_API_KEY = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"  # Replace with your actual imgbb API key
+IMGBB_API_KEY = "ddd01452fcc0b8c24efe012b1302eadb"  # Replace with your actual imgbb API key
 
 def upload_image_to_imgbb(image_path):
     """
@@ -54,6 +54,8 @@ def upload_image_to_imgbb(image_path):
         import traceback
         traceback.print_exc()
         return None
+if __name__ == "__main__":
+    upload_image_to_imgbb(image_path="order_failed.png")
 
 
 
