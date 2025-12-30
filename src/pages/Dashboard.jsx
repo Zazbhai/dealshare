@@ -48,7 +48,7 @@ function Dashboard() {
     // Check initial automation status to sync state
     checkInitialStatus()
   }, [user])
-  
+
   const loadProductUrls = () => {
     if (user) {
       setFormData(prev => ({
@@ -116,7 +116,7 @@ function Dashboard() {
         landmark: formData.landmark
       }
       localStorage.setItem('savedOrderDetails', JSON.stringify(orderDetails))
-      
+
       // Save product URLs to user settings
       try {
         const result = await updateSettings({
@@ -180,7 +180,7 @@ function Dashboard() {
   }
 
   const handleStart = async () => {
-    
+
     // Validate form
     if (!formData.name.trim() || !formData.houseFlatNo.trim() || !formData.landmark.trim()) {
       addLog('error', 'Please fill in all fields (Name, House/Flat No., Landmark)')
@@ -190,8 +190,8 @@ function Dashboard() {
     // Validate numeric inputs
     const totalOrders = parseInt(formData.totalOrders) || 1
     const maxParallel = parseInt(formData.maxParallelWindows) || 1
-    
-    
+
+
     if (totalOrders < 1) {
       addLog('error', 'Total orders must be at least 1')
       return
@@ -214,16 +214,16 @@ function Dashboard() {
         return
       }
     }
-    
+
     // Get product URLs - Primary is mandatory, others are optional
     let primaryUrl = formData.primaryProductUrl ? formData.primaryProductUrl.trim() : ''
-    
+
     // Primary URL is mandatory
     if (!primaryUrl) {
       addLog('error', '❌ Primary Product URL is required. Please configure it.')
       return
     }
-    
+
     if (price === null || price <= 0) {
       addLog('error', '❌ Service price is not set. Please contact admin to set the price.')
       return
@@ -248,7 +248,7 @@ function Dashboard() {
 
     try {
       const result = await startAutomation(formData)
-      
+
       if (result.success) {
         addLog('success', '✅ Automation started successfully')
         // Only set running state after backend confirms success
@@ -264,7 +264,7 @@ function Dashboard() {
 
   const handleStop = async () => {
     addLog('warning', '🛑 Stopping all workers and cancelling numbers...')
-    
+
     try {
       const result = await stopAutomation()
       if (result.success) {
@@ -361,22 +361,22 @@ function Dashboard() {
   // Poll automation status when running
   useEffect(() => {
     let intervalId = null
-    
+
     // Only poll if we're actually running or have started
     if (!isRunning && !hasStarted) {
       return // Don't poll if we haven't started
     }
-    
+
     const pollStatus = async () => {
       try {
         const status = await getAutomationStatus()
-        
+
         if (status.success) {
-          const successCount = status.success || 0
-          const failureCount = status.failure || 0
+          const successCount = status.success_count || 0
+          const failureCount = status.failure_count || 0
           const totalCount = successCount + failureCount
           const backendIsRunning = status.is_running === true
-          
+
           // Only update stats if we've actually started
           if (hasStarted) {
             setRealtimeStats({
@@ -385,7 +385,15 @@ function Dashboard() {
               total: totalCount
             })
           }
-          
+
+          // Check for critical failure (all products failed)
+          if (status.all_products_failed) {
+            if (!showAllProductsFailedModal) {
+              setShowAllProductsFailedModal(true)
+              addLog('error', '🚨 ALL PRODUCTS FAILED - Stopped Automation')
+            }
+          }
+
           // Handle state transitions
           if (!backendIsRunning && isRunning && hasStarted) {
             // Automation completed - only show modal if we actually ran
@@ -412,7 +420,7 @@ function Dashboard() {
         // Silently handle errors - don't spam logs
       }
     }
-    
+
     // Poll every 1 second when running
     if (isRunning) {
       intervalId = setInterval(pollStatus, 1000)
@@ -422,7 +430,7 @@ function Dashboard() {
       // If we started but aren't running, check once more to catch completion
       pollStatus()
     }
-    
+
     return () => {
       if (intervalId) {
         clearInterval(intervalId)
@@ -469,31 +477,28 @@ function Dashboard() {
         >
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`px-4 py-2 font-semibold transition-colors ${
-              activeTab === 'dashboard'
-                ? 'text-purple-400 border-b-2 border-purple-400'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
+            className={`px-4 py-2 font-semibold transition-colors ${activeTab === 'dashboard'
+              ? 'text-purple-400 border-b-2 border-purple-400'
+              : 'text-gray-400 hover:text-gray-300'
+              }`}
           >
             Dashboard
           </button>
           <button
             onClick={() => setActiveTab('reports')}
-            className={`px-4 py-2 font-semibold transition-colors ${
-              activeTab === 'reports'
-                ? 'text-purple-400 border-b-2 border-purple-400'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
+            className={`px-4 py-2 font-semibold transition-colors ${activeTab === 'reports'
+              ? 'text-purple-400 border-b-2 border-purple-400'
+              : 'text-gray-400 hover:text-gray-300'
+              }`}
           >
             Reports
           </button>
           <button
             onClick={() => setActiveTab('logs')}
-            className={`px-4 py-2 font-semibold transition-colors ${
-              activeTab === 'logs'
-                ? 'text-purple-400 border-b-2 border-purple-400'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
+            className={`px-4 py-2 font-semibold transition-colors ${activeTab === 'logs'
+              ? 'text-purple-400 border-b-2 border-purple-400'
+              : 'text-gray-400 hover:text-gray-300'
+              }`}
           >
             Logs
           </button>
@@ -502,736 +507,731 @@ function Dashboard() {
         {/* Dashboard Tab Content */}
         {activeTab === 'dashboard' && (
           <>
-        {/* Stats Cards */}
-        <div className={`grid gap-4 sm:gap-6 mb-6 sm:mb-8 ${
-          isRunning 
-            ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6' 
-            : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
-        }`}>
-          <StatCard
-            icon={<TrendingUp />}
-            label="Balance"
-            value={balance !== null ? `₹${balance?.toFixed(2) || '0.00'}` : 'Loading...'}
-            color="from-green-400 to-emerald-500"
-          />
-          <StatCard
-            icon={<Zap />}
-            label="Service Price"
-            value={price !== null ? `₹${price.toFixed(2)}` : 'Not Set'}
-            color="from-yellow-400 to-orange-500"
-          />
-          {price !== null && price > 0 && balance !== null && balance > 0 && (
-            <StatCard
-              icon={<TrendingUp />}
-              label="Capacity"
-              value={Math.floor(balance / price)}
-              color="from-blue-400 to-cyan-500"
-            />
-          )}
-          <StatCard
-            icon={<Activity />}
-            label="Status"
-            value={isRunning ? 'RUNNING' : 'IDLE'}
-            color={isRunning ? 'from-red-400 to-pink-500' : 'from-blue-400 to-cyan-500'}
-          />
-          {isRunning && (
-            <>
-              <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
+            {/* Stats Cards */}
+            <div className={`grid gap-4 sm:gap-6 mb-6 sm:mb-8 ${isRunning
+              ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6'
+              : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
+              }`}>
+              <StatCard
+                icon={<TrendingUp />}
+                label="Balance"
+                value={balance !== null ? `₹${balance?.toFixed(2) || '0.00'}` : 'Loading...'}
+                color="from-green-400 to-emerald-500"
+              />
+              <StatCard
+                icon={<Zap />}
+                label="Service Price"
+                value={price !== null ? `₹${price.toFixed(2)}` : 'Not Set'}
+                color="from-yellow-400 to-orange-500"
+              />
+              {price !== null && price > 0 && balance !== null && balance > 0 && (
                 <StatCard
                   icon={<TrendingUp />}
-                  label="Success (Live)"
-                  value={realtimeStats.success}
-                  color="from-green-400 to-emerald-500"
-                />
-              </motion.div>
-              <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
-              >
-                <StatCard
-                  icon={<Square />}
-                  label="Failed (Live)"
-                  value={realtimeStats.failure}
-                  color="from-red-400 to-pink-500"
-                />
-              </motion.div>
-              <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity, delay: 0.6 }}
-              >
-                <StatCard
-                  icon={<Zap />}
-                  label="Total Processed"
-                  value={realtimeStats.total}
+                  label="Capacity"
+                  value={Math.floor(balance / price)}
                   color="from-blue-400 to-cyan-500"
                 />
-              </motion.div>
-            </>
-          )}
-        </div>
-
-        {/* Logs Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-purple-500/20 shadow-2xl mb-4 sm:mb-6"
-        >
-          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <div className="p-2 sm:p-3 bg-purple-500/20 rounded-lg">
-              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold">Detailed Logs</h2>
-          </div>
-
-          <div className="bg-black/40 rounded-lg p-3 sm:p-4 h-48 sm:h-64 overflow-y-auto font-mono text-xs sm:text-sm">
-            {logs.length === 0 ? (
-              <div className="text-gray-500 text-center py-8">No logs yet. Start automation to see activity.</div>
-            ) : (
-              logs.map((log, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`mb-2 flex items-start gap-1 sm:gap-2 ${
-                    log.type === 'error' ? 'text-red-400' :
-                    log.type === 'success' ? 'text-green-400' :
-                    log.type === 'warning' ? 'text-yellow-400' :
-                    'text-gray-300'
-                  }`}
-                >
-                  <span className="text-gray-500 text-xs min-w-[60px] sm:min-w-[80px] flex-shrink-0">{log.timestamp}</span>
-                  <span className="break-words">{log.message}</span>
-                </motion.div>
-              ))
-            )}
-            <div ref={logsEndRef} />
-          </div>
-        </motion.div>
-
-        {/* Input Form Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-purple-500/20 shadow-2xl mb-4 sm:mb-6"
-        >
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold">Order Details</h2>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleToggleEditMode}
-              disabled={isRunning}
-              className={`p-2 rounded-lg transition-all flex items-center gap-2 ${
-                isEditMode 
-                  ? 'bg-green-600 hover:bg-green-700 text-white' 
-                  : 'bg-purple-600 hover:bg-purple-700 text-white'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-              title={isEditMode ? 'Save changes' : 'Edit order details'}
-            >
-              {isEditMode ? (
+              )}
+              <StatCard
+                icon={<Activity />}
+                label="Status"
+                value={isRunning ? 'RUNNING' : 'IDLE'}
+                color={isRunning ? 'from-red-400 to-pink-500' : 'from-blue-400 to-cyan-500'}
+              />
+              {isRunning && (
                 <>
-                  <Save className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="text-xs sm:text-sm font-semibold hidden sm:inline">Save</span>
-                </>
-              ) : (
-                <>
-                  <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="text-xs sm:text-sm font-semibold hidden sm:inline">Edit</span>
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <StatCard
+                      icon={<TrendingUp />}
+                      label="Success (Live)"
+                      value={realtimeStats.success}
+                      color="from-green-400 to-emerald-500"
+                    />
+                  </motion.div>
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
+                  >
+                    <StatCard
+                      icon={<Square />}
+                      label="Failed (Live)"
+                      value={realtimeStats.failure}
+                      color="from-red-400 to-pink-500"
+                    />
+                  </motion.div>
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: 0.6 }}
+                  >
+                    <StatCard
+                      icon={<Zap />}
+                      label="Total Processed"
+                      value={realtimeStats.total}
+                      color="from-blue-400 to-cyan-500"
+                    />
+                  </motion.div>
                 </>
               )}
-            </motion.button>
-          </div>
-
-          <div className="space-y-4">
-            {/* Name Input */}
-            <div>
-              <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                <User className="w-4 h-4 flex-shrink-0" />
-                Name
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Enter your name"
-                disabled={isRunning || !isEditMode}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-              />
             </div>
 
-            {/* House/Flat No. Input */}
-            <div>
-              <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                <Home className="w-4 h-4 flex-shrink-0" />
-                House / Flat No.
-              </label>
-              <input
-                type="text"
-                value={formData.houseFlatNo}
-                onChange={(e) => handleInputChange('houseFlatNo', e.target.value)}
-                placeholder="Enter house/flat number"
-                disabled={isRunning || !isEditMode}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-              />
-            </div>
-
-            {/* Landmark Input */}
-            <div>
-              <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                <MapPin className="w-4 h-4 flex-shrink-0" />
-                Landmark
-              </label>
-              <input
-                type="text"
-                value={formData.landmark}
-                onChange={(e) => handleInputChange('landmark', e.target.value)}
-                placeholder="Enter landmark"
-                disabled={isRunning || !isEditMode}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-              />
-            </div>
-
-            {/* Total Orders Input */}
-            <div>
-              <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                <TrendingUp className="w-4 h-4 flex-shrink-0" />
-                Total Orders
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={formData.totalOrders}
-                onChange={(e) => handleInputChange('totalOrders', e.target.value)}
-                placeholder="Number of orders to process"
-                disabled={isRunning}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-              />
-            </div>
-
-            {/* Max Parallel Windows Input */}
-            <div>
-              <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                <Zap className="w-4 h-4 flex-shrink-0" />
-                Max Parallel Windows
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={formData.maxParallelWindows}
-                onChange={(e) => handleInputChange('maxParallelWindows', e.target.value)}
-                placeholder="Max windows to open simultaneously"
-                disabled={isRunning}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-              />
-              <p className="text-xs text-gray-500 mt-1">Maximum number of browser windows to open at the same time</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Product Links Dropdown Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-blue-500/20 shadow-2xl mb-4 sm:mb-6 overflow-hidden"
-        >
-          {/* Dropdown Header */}
-          <motion.button
-            onClick={() => setIsProductLinksOpen(!isProductLinksOpen)}
-            disabled={isRunning}
-            className="w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
-            whileHover={!isRunning ? { scale: 1.01 } : {}}
-            whileTap={!isRunning ? { scale: 0.99 } : {}}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 transition-colors">
-                <Link2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
-              </div>
-              <div className="text-left">
-                <h2 className="text-lg sm:text-xl font-bold text-white">Product Links</h2>
-                <p className="text-xs sm:text-sm text-gray-400 mt-0.5">Configure your product URLs</p>
-              </div>
-            </div>
+            {/* Logs Section */}
             <motion.div
-              animate={{ rotate: isProductLinksOpen ? 180 : 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="p-2 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-purple-500/20 shadow-2xl mb-4 sm:mb-6"
             >
-              <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
-            </motion.div>
-          </motion.button>
-
-          {/* Dropdown Content */}
-          <motion.div
-            initial={false}
-            animate={{
-              height: isProductLinksOpen ? "auto" : 0,
-              opacity: isProductLinksOpen ? 1 : 0
-            }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 space-y-4">
-              {/* Primary Product URL */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ 
-                  opacity: isProductLinksOpen ? 1 : 0,
-                  x: isProductLinksOpen ? 0 : -20
-                }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-              >
-                <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                  Primary Product URL <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.primaryProductUrl}
-                  onChange={(e) => handleInputChange('primaryProductUrl', e.target.value)}
-                  placeholder="https://www.dealshare.in/pname/..."
-                  disabled={isRunning || !isEditMode}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
-                />
-              </motion.div>
-
-              {/* Secondary Product URL */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ 
-                  opacity: isProductLinksOpen ? 1 : 0,
-                  x: isProductLinksOpen ? 0 : -20
-                }}
-                transition={{ duration: 0.3, delay: 0.15 }}
-              >
-                <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-purple-400"></div>
-                  Secondary Product URL <span className="text-gray-500 text-xs">(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.secondaryProductUrl}
-                  onChange={(e) => handleInputChange('secondaryProductUrl', e.target.value)}
-                  placeholder="https://www.dealshare.in/pname/..."
-                  disabled={isRunning || !isEditMode}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
-                />
-              </motion.div>
-
-              {/* Third Product URL */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ 
-                  opacity: isProductLinksOpen ? 1 : 0,
-                  x: isProductLinksOpen ? 0 : -20
-                }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-              >
-                <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-pink-400"></div>
-                  Third Product URL <span className="text-gray-500 text-xs">(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.thirdProductUrl}
-                  onChange={(e) => handleInputChange('thirdProductUrl', e.target.value)}
-                  placeholder="https://www.dealshare.in/pname/..."
-                  disabled={isRunning || !isEditMode}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
-                />
-              </motion.div>
-
-              {/* Info Text */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: isProductLinksOpen ? 1 : 0 }}
-                transition={{ duration: 0.3, delay: 0.25 }}
-                className="mt-4 pt-4 border-t border-gray-700/50"
-              >
-                <p className="text-xs text-gray-400 flex items-start gap-2">
-                  <Zap className="w-3 h-3 mt-0.5 text-blue-400 flex-shrink-0" />
-                  <span>Automation will try URLs in order: Primary → Secondary → Third. If all 3 fail, automation stops.</span>
-                </p>
-              </motion.div>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Location Settings Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-green-900/50 to-blue-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-green-500/20 shadow-2xl mb-4 sm:mb-6"
-        >
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/20 rounded-lg">
-                <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="p-2 sm:p-3 bg-purple-500/20 rounded-lg">
+                  <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
+                </div>
+                <h2 className="text-xl sm:text-2xl font-bold">Detailed Logs</h2>
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold">Location Settings</h2>
-            </div>
-          </div>
 
-          <div className="space-y-4">
-            {/* Select Location Toggle */}
-            <div className="p-4 bg-black/30 rounded-lg border border-green-500/20">
-              <div className="flex items-center justify-between mb-3">
-                <label className="flex items-center gap-2 text-sm sm:text-base font-semibold text-gray-300">
-                  <Navigation2 className="w-5 h-5 text-green-400" />
-                  Select Location
-                </label>
-                <button
-                  onClick={() => handleInputChange('selectLocation', !formData.selectLocation)}
+              <div className="bg-black/40 rounded-lg p-3 sm:p-4 h-48 sm:h-64 overflow-y-auto font-mono text-xs sm:text-sm">
+                {logs.length === 0 ? (
+                  <div className="text-gray-500 text-center py-8">No logs yet. Start automation to see activity.</div>
+                ) : (
+                  logs.map((log, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className={`mb-2 flex items-start gap-1 sm:gap-2 ${log.type === 'error' ? 'text-red-400' :
+                        log.type === 'success' ? 'text-green-400' :
+                          log.type === 'warning' ? 'text-yellow-400' :
+                            'text-gray-300'
+                        }`}
+                    >
+                      <span className="text-gray-500 text-xs min-w-[60px] sm:min-w-[80px] flex-shrink-0">{log.timestamp}</span>
+                      <span className="break-words">{log.message}</span>
+                    </motion.div>
+                  ))
+                )}
+                <div ref={logsEndRef} />
+              </div>
+            </motion.div>
+
+            {/* Input Form Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-purple-500/20 shadow-2xl mb-4 sm:mb-6"
+            >
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold">Order Details</h2>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleToggleEditMode}
                   disabled={isRunning}
-                  className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed ${
-                    formData.selectLocation ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gray-600'
-                  }`}
-                  type="button"
+                  className={`p-2 rounded-lg transition-all flex items-center gap-2 ${isEditMode
+                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                    : 'bg-purple-600 hover:bg-purple-700 text-white'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  title={isEditMode ? 'Save changes' : 'Edit order details'}
                 >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                      formData.selectLocation ? 'translate-x-8' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
+                  {isEditMode ? (
+                    <>
+                      <Save className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="text-xs sm:text-sm font-semibold hidden sm:inline">Save</span>
+                    </>
+                  ) : (
+                    <>
+                      <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="text-xs sm:text-sm font-semibold hidden sm:inline">Edit</span>
+                    </>
+                  )}
+                </motion.button>
               </div>
-              <p className="text-xs text-gray-400">
-                {formData.selectLocation 
-                  ? 'Location selection step will be executed during automation' 
-                  : 'Location selection step will be skipped'}
-              </p>
-            </div>
 
-            {/* Current Location Dropdown */}
-            <div>
-              <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                <Navigation2 className="w-4 h-4 flex-shrink-0" />
-                Current Location
-              </label>
-              <select
-                value={formData.currentLocation}
-                onChange={(e) => {
-                  const value = e.target.value
-                  handleInputChange('currentLocation', value)
-                  if (value === 'default') {
-                    handleInputChange('latitude', '26.994880')
-                    handleInputChange('longitude', '75.774836')
-                  }
-                }}
-                disabled={isRunning}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-              >
-                <option value="default" className="bg-gray-800">Default Location (26.994880, 75.774836)</option>
-                <option value="custom" className="bg-gray-800">Custom Location</option>
-              </select>
-            </div>
-
-            {/* Latitude and Longitude Inputs */}
-            {formData.currentLocation === 'custom' && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-              >
+              <div className="space-y-4">
+                {/* Name Input */}
                 <div>
                   <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                    Latitude
+                    <User className="w-4 h-4 flex-shrink-0" />
+                    Name
                   </label>
                   <input
-                    type="number"
-                    step="any"
-                    value={formData.latitude}
-                    onChange={(e) => handleInputChange('latitude', e.target.value)}
-                    placeholder="26.994880"
-                    disabled={isRunning}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    placeholder="Enter your name"
+                    disabled={isRunning || !isEditMode}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                   />
                 </div>
+
+                {/* House/Flat No. Input */}
                 <div>
                   <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                    Longitude
+                    <Home className="w-4 h-4 flex-shrink-0" />
+                    House / Flat No.
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.houseFlatNo}
+                    onChange={(e) => handleInputChange('houseFlatNo', e.target.value)}
+                    placeholder="Enter house/flat number"
+                    disabled={isRunning || !isEditMode}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                  />
+                </div>
+
+                {/* Landmark Input */}
+                <div>
+                  <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                    <MapPin className="w-4 h-4 flex-shrink-0" />
+                    Landmark
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.landmark}
+                    onChange={(e) => handleInputChange('landmark', e.target.value)}
+                    placeholder="Enter landmark"
+                    disabled={isRunning || !isEditMode}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                  />
+                </div>
+
+                {/* Total Orders Input */}
+                <div>
+                  <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                    <TrendingUp className="w-4 h-4 flex-shrink-0" />
+                    Total Orders
                   </label>
                   <input
                     type="number"
-                    step="any"
-                    value={formData.longitude}
-                    onChange={(e) => handleInputChange('longitude', e.target.value)}
-                    placeholder="75.774836"
+                    min="1"
+                    value={formData.totalOrders}
+                    onChange={(e) => handleInputChange('totalOrders', e.target.value)}
+                    placeholder="Number of orders to process"
                     disabled={isRunning}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                   />
+                </div>
+
+                {/* Max Parallel Windows Input */}
+                <div>
+                  <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                    <Zap className="w-4 h-4 flex-shrink-0" />
+                    Max Parallel Windows
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.maxParallelWindows}
+                    onChange={(e) => handleInputChange('maxParallelWindows', e.target.value)}
+                    placeholder="Max windows to open simultaneously"
+                    disabled={isRunning}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Maximum number of browser windows to open at the same time</p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Product Links Dropdown Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-blue-500/20 shadow-2xl mb-4 sm:mb-6 overflow-hidden"
+            >
+              {/* Dropdown Header */}
+              <motion.button
+                onClick={() => setIsProductLinksOpen(!isProductLinksOpen)}
+                disabled={isRunning}
+                className="w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
+                whileHover={!isRunning ? { scale: 1.01 } : {}}
+                whileTap={!isRunning ? { scale: 0.99 } : {}}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 transition-colors">
+                    <Link2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
+                  </div>
+                  <div className="text-left">
+                    <h2 className="text-lg sm:text-xl font-bold text-white">Product Links</h2>
+                    <p className="text-xs sm:text-sm text-gray-400 mt-0.5">Configure your product URLs</p>
+                  </div>
+                </div>
+                <motion.div
+                  animate={{ rotate: isProductLinksOpen ? 180 : 0 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="p-2 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors"
+                >
+                  <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
+                </motion.div>
+              </motion.button>
+
+              {/* Dropdown Content */}
+              <motion.div
+                initial={false}
+                animate={{
+                  height: isProductLinksOpen ? "auto" : 0,
+                  opacity: isProductLinksOpen ? 1 : 0
+                }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 space-y-4">
+                  {/* Primary Product URL */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{
+                      opacity: isProductLinksOpen ? 1 : 0,
+                      x: isProductLinksOpen ? 0 : -20
+                    }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
+                  >
+                    <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                      Primary Product URL <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.primaryProductUrl}
+                      onChange={(e) => handleInputChange('primaryProductUrl', e.target.value)}
+                      placeholder="https://www.dealshare.in/pname/..."
+                      disabled={isRunning || !isEditMode}
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
+                    />
+                  </motion.div>
+
+                  {/* Secondary Product URL */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{
+                      opacity: isProductLinksOpen ? 1 : 0,
+                      x: isProductLinksOpen ? 0 : -20
+                    }}
+                    transition={{ duration: 0.3, delay: 0.15 }}
+                  >
+                    <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                      <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+                      Secondary Product URL <span className="text-gray-500 text-xs">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.secondaryProductUrl}
+                      onChange={(e) => handleInputChange('secondaryProductUrl', e.target.value)}
+                      placeholder="https://www.dealshare.in/pname/..."
+                      disabled={isRunning || !isEditMode}
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
+                    />
+                  </motion.div>
+
+                  {/* Third Product URL */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{
+                      opacity: isProductLinksOpen ? 1 : 0,
+                      x: isProductLinksOpen ? 0 : -20
+                    }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                  >
+                    <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                      <div className="w-2 h-2 rounded-full bg-pink-400"></div>
+                      Third Product URL <span className="text-gray-500 text-xs">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.thirdProductUrl}
+                      onChange={(e) => handleInputChange('thirdProductUrl', e.target.value)}
+                      placeholder="https://www.dealshare.in/pname/..."
+                      disabled={isRunning || !isEditMode}
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
+                    />
+                  </motion.div>
+
+                  {/* Info Text */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: isProductLinksOpen ? 1 : 0 }}
+                    transition={{ duration: 0.3, delay: 0.25 }}
+                    className="mt-4 pt-4 border-t border-gray-700/50"
+                  >
+                    <p className="text-xs text-gray-400 flex items-start gap-2">
+                      <Zap className="w-3 h-3 mt-0.5 text-blue-400 flex-shrink-0" />
+                      <span>Automation will try URLs in order: Primary → Secondary → Third. If all 3 fail, automation stops.</span>
+                    </p>
+                  </motion.div>
                 </div>
               </motion.div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Start/Stop Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center"
-        >
-          {!isRunning ? (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={(e) => {
-                handleStart()
-              }}
-              disabled={!formData.name.trim() || !formData.houseFlatNo.trim() || !formData.landmark.trim() || !formData.totalOrders || !formData.maxParallelWindows || !formData.primaryProductUrl.trim()}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-bold text-base sm:text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 shadow-xl"
-            >
-              <Play className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span>Start Automation</span>
-            </motion.button>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleStop}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 rounded-lg font-bold text-base sm:text-lg transition-all flex items-center justify-center gap-2 sm:gap-3 shadow-xl"
-            >
-              <Square className="w-5 h-5 sm:w-6 sm:h-6" />
-              <span>Stop All Workers</span>
-            </motion.button>
-          )}
-        </motion.div>
-
-        {/* Completion Modal */}
-        {showCompletionModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowCompletionModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 border border-purple-500/20 shadow-2xl max-w-md w-full"
-            >
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
-                  <Activity className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Automation Complete!</h2>
-                <p className="text-gray-400">All orders have been processed</p>
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center justify-between p-4 bg-green-500/10 rounded-lg border border-green-500/20">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-green-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Successful Orders</p>
-                      <p className="text-2xl font-bold text-green-400">{completionStats.success}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-red-500/10 rounded-lg border border-red-500/20">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
-                      <Square className="w-5 h-5 text-red-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Failed Orders</p>
-                      <p className="text-2xl font-bold text-red-400">{completionStats.failure}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
-                      <Activity className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Total Orders</p>
-                      <p className="text-2xl font-bold text-blue-400">{completionStats.success + completionStats.failure}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  setShowCompletionModal(false)
-                  loadOrdersReport() // Refresh reports
-                }}
-                className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg font-semibold transition-all"
-              >
-                Close
-              </button>
             </motion.div>
-          </motion.div>
-        )}
 
-        {/* All Products Failed Modal */}
-        {showAllProductsFailedModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowAllProductsFailedModal(false)}
-          >
+            {/* Location Settings Section */}
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 max-w-md w-full border border-red-500/30 shadow-2xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-br from-green-900/50 to-blue-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-green-500/20 shadow-2xl mb-4 sm:mb-6"
             >
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <AlertCircle className="w-8 h-8 text-red-400" />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">⚠️ All Products Out of Stock!</h2>
-                <p className="text-gray-400">All three product URLs failed. Automation stopped immediately.</p>
-              </div>
-
-              {/* Warning Banner */}
-              <div className="mb-6 p-4 bg-red-500/10 rounded-lg border border-red-500/30">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-red-400 mb-1">All Products Failed</p>
-                    <p className="text-xs text-gray-400">
-                      Primary, Secondary, and Third product URLs are all out of stock. Please update your product URLs and try again.
-                    </p>
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-500/20 rounded-lg">
+                    <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
                   </div>
+                  <h2 className="text-xl sm:text-2xl font-bold">Location Settings</h2>
                 </div>
               </div>
 
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center justify-between p-4 bg-green-500/10 rounded-lg border border-green-500/20">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-green-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Successful Orders</p>
-                      <p className="text-2xl font-bold text-green-400">{completionStats.success}</p>
-                    </div>
+              <div className="space-y-4">
+                {/* Select Location Toggle */}
+                <div className="p-4 bg-black/30 rounded-lg border border-green-500/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="flex items-center gap-2 text-sm sm:text-base font-semibold text-gray-300">
+                      <Navigation2 className="w-5 h-5 text-green-400" />
+                      Select Location
+                    </label>
+                    <button
+                      onClick={() => handleInputChange('selectLocation', !formData.selectLocation)}
+                      disabled={isRunning}
+                      className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed ${formData.selectLocation ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gray-600'
+                        }`}
+                      type="button"
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${formData.selectLocation ? 'translate-x-8' : 'translate-x-1'
+                          }`}
+                      />
+                    </button>
                   </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-red-500/10 rounded-lg border border-red-500/20">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
-                      <Square className="w-5 h-5 text-red-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Failed Orders</p>
-                      <p className="text-2xl font-bold text-red-400">{completionStats.failure}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
-                      <Activity className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Total Processed</p>
-                      <p className="text-2xl font-bold text-blue-400">{completionStats.success + completionStats.failure}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  setShowAllProductsFailedModal(false)
-                  loadOrdersReport() // Refresh reports
-                }}
-                className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg font-semibold text-white transition-all"
-              >
-                Close
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* Capacity Error Modal */}
-        {showCapacityErrorModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowCapacityErrorModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 border border-red-500/20 shadow-2xl max-w-md w-full"
-            >
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-red-500 to-pink-500 rounded-full flex items-center justify-center">
-                  <AlertCircle className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Insufficient Capacity</h2>
-                <p className="text-gray-400">Total orders exceed available capacity</p>
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <div className="p-4 bg-red-500/10 rounded-lg border border-red-500/20">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-400">Total Orders:</span>
-                      <span className="text-lg font-bold text-red-400">{parseInt(formData.totalOrders) || 1}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-400">Available Capacity:</span>
-                      <span className="text-lg font-bold text-green-400">
-                        {price !== null && price > 0 && balance !== null && balance > 0 
-                          ? Math.floor(balance / price) 
-                          : 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-700">
-                      <span className="text-sm text-gray-400">Balance:</span>
-                      <span className="text-sm font-semibold text-white">
-                        {balance !== null ? `₹${balance.toFixed(2)}` : 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-400">Price per Order:</span>
-                      <span className="text-sm font-semibold text-white">
-                        {price !== null ? `₹${price.toFixed(2)}` : 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                  <p className="text-sm text-yellow-400 text-center">
-                    Please reduce the number of orders to {price !== null && price > 0 && balance !== null && balance > 0 
-                      ? Math.floor(balance / price) 
-                      : 'available capacity'} or less
+                  <p className="text-xs text-gray-400">
+                    {formData.selectLocation
+                      ? 'Location selection step will be executed during automation'
+                      : 'Location selection step will be skipped'}
                   </p>
                 </div>
-              </div>
 
-              <button
-                onClick={() => {
-                  setShowCapacityErrorModal(false)
-                }}
-                className="w-full px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2"
-              >
-                <X className="w-5 h-5" />
-                Close
-              </button>
+                {/* Current Location Dropdown */}
+                <div>
+                  <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                    <Navigation2 className="w-4 h-4 flex-shrink-0" />
+                    Current Location
+                  </label>
+                  <select
+                    value={formData.currentLocation}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      handleInputChange('currentLocation', value)
+                      if (value === 'default') {
+                        handleInputChange('latitude', '26.994880')
+                        handleInputChange('longitude', '75.774836')
+                      }
+                    }}
+                    disabled={isRunning}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                  >
+                    <option value="default" className="bg-gray-800">Default Location (26.994880, 75.774836)</option>
+                    <option value="custom" className="bg-gray-800">Custom Location</option>
+                  </select>
+                </div>
+
+                {/* Latitude and Longitude Inputs */}
+                {formData.currentLocation === 'custom' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                  >
+                    <div>
+                      <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                        Latitude
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={formData.latitude}
+                        onChange={(e) => handleInputChange('latitude', e.target.value)}
+                        placeholder="26.994880"
+                        disabled={isRunning}
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                        Longitude
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={formData.longitude}
+                        onChange={(e) => handleInputChange('longitude', e.target.value)}
+                        placeholder="75.774836"
+                        disabled={isRunning}
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </div>
             </motion.div>
-          </motion.div>
-        )}
+
+            {/* Start/Stop Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-center"
+            >
+              {!isRunning ? (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={(e) => {
+                    handleStart()
+                  }}
+                  disabled={!formData.name.trim() || !formData.houseFlatNo.trim() || !formData.landmark.trim() || !formData.totalOrders || !formData.maxParallelWindows || !formData.primaryProductUrl.trim()}
+                  className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-bold text-base sm:text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 shadow-xl"
+                >
+                  <Play className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <span>Start Automation</span>
+                </motion.button>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleStop}
+                  className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 rounded-lg font-bold text-base sm:text-lg transition-all flex items-center justify-center gap-2 sm:gap-3 shadow-xl"
+                >
+                  <Square className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <span>Stop All Workers</span>
+                </motion.button>
+              )}
+            </motion.div>
+
+            {/* Completion Modal */}
+            {showCompletionModal && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                onClick={() => setShowCompletionModal(false)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 border border-purple-500/20 shadow-2xl max-w-md w-full"
+                >
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                      <Activity className="w-8 h-8 text-white" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Automation Complete!</h2>
+                    <p className="text-gray-400">All orders have been processed</p>
+                  </div>
+
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-center justify-between p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                          <TrendingUp className="w-5 h-5 text-green-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Successful Orders</p>
+                          <p className="text-2xl font-bold text-green-400">{completionStats.success}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                          <Square className="w-5 h-5 text-red-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Failed Orders</p>
+                          <p className="text-2xl font-bold text-red-400">{completionStats.failure}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
+                          <Activity className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Total Orders</p>
+                          <p className="text-2xl font-bold text-blue-400">{completionStats.success + completionStats.failure}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setShowCompletionModal(false)
+                      loadOrdersReport() // Refresh reports
+                    }}
+                    className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg font-semibold transition-all"
+                  >
+                    Close
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
+
+            {/* All Products Failed Modal */}
+            {showAllProductsFailedModal && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                onClick={() => setShowAllProductsFailedModal(false)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 max-w-md w-full border border-red-500/30 shadow-2xl"
+                >
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <AlertCircle className="w-8 h-8 text-red-400" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">⚠️ All Products Out of Stock!</h2>
+                    <p className="text-gray-400">All three product URLs failed. Automation stopped immediately.</p>
+                  </div>
+
+                  {/* Warning Banner */}
+                  <div className="mb-6 p-4 bg-red-500/10 rounded-lg border border-red-500/30">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-red-400 mb-1">All Products Failed</p>
+                        <p className="text-xs text-gray-400">
+                          Primary, Secondary, and Third product URLs are all out of stock. Please update your product URLs and try again.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-center justify-between p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                          <TrendingUp className="w-5 h-5 text-green-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Successful Orders</p>
+                          <p className="text-2xl font-bold text-green-400">{completionStats.success}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                          <Square className="w-5 h-5 text-red-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Failed Orders</p>
+                          <p className="text-2xl font-bold text-red-400">{completionStats.failure}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
+                          <Activity className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Total Processed</p>
+                          <p className="text-2xl font-bold text-blue-400">{completionStats.success + completionStats.failure}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setShowAllProductsFailedModal(false)
+                      loadOrdersReport() // Refresh reports
+                    }}
+                    className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg font-semibold text-white transition-all"
+                  >
+                    Close
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
+
+            {/* Capacity Error Modal */}
+            {showCapacityErrorModal && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                onClick={() => setShowCapacityErrorModal(false)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 sm:p-8 border border-red-500/20 shadow-2xl max-w-md w-full"
+                >
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-red-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <AlertCircle className="w-8 h-8 text-white" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Insufficient Capacity</h2>
+                    <p className="text-gray-400">Total orders exceed available capacity</p>
+                  </div>
+
+                  <div className="space-y-4 mb-6">
+                    <div className="p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-400">Total Orders:</span>
+                          <span className="text-lg font-bold text-red-400">{parseInt(formData.totalOrders) || 1}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-400">Available Capacity:</span>
+                          <span className="text-lg font-bold text-green-400">
+                            {price !== null && price > 0 && balance !== null && balance > 0
+                              ? Math.floor(balance / price)
+                              : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-700">
+                          <span className="text-sm text-gray-400">Balance:</span>
+                          <span className="text-sm font-semibold text-white">
+                            {balance !== null ? `₹${balance.toFixed(2)}` : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-400">Price per Order:</span>
+                          <span className="text-sm font-semibold text-white">
+                            {price !== null ? `₹${price.toFixed(2)}` : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                      <p className="text-sm text-yellow-400 text-center">
+                        Please reduce the number of orders to {price !== null && price > 0 && balance !== null && balance > 0
+                          ? Math.floor(balance / price)
+                          : 'available capacity'} or less
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setShowCapacityErrorModal(false)
+                    }}
+                    className="w-full px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <X className="w-5 h-5" />
+                    Close
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
 
           </>
         )}
@@ -1285,9 +1285,8 @@ function Dashboard() {
                           )}
                         </td>
                         <td className="py-3 text-sm">
-                          <span className={`px-2 py-1 rounded ${
-                            order.status === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                          }`}>
+                          <span className={`px-2 py-1 rounded ${order.status === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                            }`}>
                             {order.status || '-'}
                           </span>
                         </td>

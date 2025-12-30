@@ -2,7 +2,15 @@ from playwright.sync_api import sync_playwright, TimeoutError
 import time
 import os
 import sys
+import csv
+from datetime import datetime
 from api_dynamic import get_number, get_otp, cancel_number
+# Try to import imgbb uploader
+try:
+    from imgbb_upload import upload_image_to_imgbb
+except ImportError:
+    print("⚠️ imgbb_upload module not found. Screenshot upload will be skipped.")
+    def upload_image_to_imgbb(path): return "UPLOAD_FAILED_MODULE_MISSING"
 
 
 
@@ -276,50 +284,81 @@ def click_add_button(page):
 
 def add_product_and_check_cart(page, product_url):
     """
-    Add product to cart and check for removal notice
+    Add product to cart and check for removal notice and OOS
     Returns True if cart is ready to proceed, False if needs retry with different product
     """
     print(f"🛒 Opening product page: {product_url}")
-    page.goto(product_url, timeout=60000)
+    try:
+        page.goto(product_url, timeout=45000)
+    except Exception as e:
+        print(f"⚠️ Failed to load page: {e}")
+        return False
+        
     time.sleep(1)
 
-    click_add_button(page)
-    print("✅ Product added to cart")
+    # -----------------------------
+    # FAST OOS CHECK
+    # -----------------------------
+    # Check for immediate "Out of Stock" indicators
+    oos_indicators = ["Currently Unavailable", "Notify Me", "Out of Stock", "Sold Out"]
+    for indicator in oos_indicators:
+        if page.locator(f"text={indicator}").count() > 0:
+            if page.locator(f"text={indicator}").first.is_visible():
+                print(f"⚠️ Product is Out of Stock ('{indicator}' detected)")
+                return False
+
+    # -----------------------------
+    # ADD TO CART
+    # -----------------------------
+    try:
+        click_add_button(page)
+        print("✅ Added to cart (initially)")
+    except Exception as e:
+        print(f"⚠️ Failed to click Add button (likely OOS or page changed): {e}")
+        return False
+
     time.sleep(3)
 
     # -----------------------------
     # CART CHECK
     # -----------------------------
     print("🛍️ Opening cart...")
-    page.locator("img[src*='bag']").first.click(force=True)
-    print("✅ Clicked bag icon")
+    try:
+        page.locator("img[src*='bag']").first.click(force=True)
+        print("✅ Clicked bag icon")
+    except Exception as e:
+        print(f"⚠️ Failed to click bag icon: {e}")
+        return False
+        
     time.sleep(2)
 
     # Check for "Remove Items & Proceed" text
     remove_text_options = [
         "Remove Items & Proceed",
         "Remove Items",
-        "Remove Item & Proceed"
+        "Remove Item & Proceed",
+        "Remove Item"
     ]
     
-    found_remove_text = False
     for text in remove_text_options:
         if page.locator(f"text={text}").count() > 0:
-            print(f"⚠️ Found '{text}' - Product needs to be removed")
-            found_remove_text = True
+            if page.locator(f"text={text}").first.is_visible():
+                print(f"⚠️ Found '{text}' - Product needs to be removed (Delivery not available)")
+                
+                # Try to cleanly remove it before failing, so next product has clean slate? 
+                # Actually, better to just fail and let next product flow handle its own state, 
+                # but clicking remove is safer to clear the bad state.
+                try:
+                    remove_btn = page.locator(f"text={text}").first
+                    if robust_click(page, remove_btn, method="locator"):
+                        print("✅ Clicked remove button to clear bad state")
+                        time.sleep(1)
+                except:
+                    pass
+                
+                return False  # Return False because this product failed
             
-            # Click the remove button
-            try:
-                remove_btn = page.locator(f"text={text}").first
-                if robust_click(page, remove_btn, method="locator"):
-                    print("✅ Clicked remove button")
-                    time.sleep(2)
-            except Exception as e:
-                print(f"⚠️ Could not click remove button: {e}")
-            
-            break
-    
-    return not found_remove_text  # Return True if no removal needed
+    return True  # Return True if no removal needed
 
 
 
@@ -372,19 +411,49 @@ def main():
         
         
         # Get API configuration from environment
-        api_key = '4ae5f380b71903cdb7b1b55018ed74eab9e7'
-        api_url = 'https://api.temporasms.com/stubs/handler_api.php'
-        country = '22'
-        operator = '10'
-        service = 'lmeh'
+        # Get API settings from environment variables (set by backend/server.py)
+        api_key = os.environ.get('API_KEY', '')
+        api_url = os.environ.get('API_URL', '')
+        country = os.environ.get('COUNTRY', '22')
+        operator = os.environ.get('OPERATOR', '10')
+        service = os.environ.get('SERVICE', 'lmeh')
+        
+        # Debug: Print API settings being used
+        print(f"[DEBUG] ========== API CONFIGURATION ==========")
+        print(f"[DEBUG] Step 1: Reading environment variables...")
+        print(f"[DEBUG]   API_KEY: {'SET' if api_key else 'NOT SET'}")
+        if api_key:
+            # Show masked version for security
+            masked_key = api_key[:4] + '*' * (len(api_key) - 8) + api_key[-4:] if len(api_key) > 8 else '****'
+            print(f"[DEBUG]   API_KEY (masked): {masked_key} (length: {len(api_key)})")
+        print(f"[DEBUG]   API_URL: {api_url}")
+        print(f"[DEBUG]   COUNTRY: {country}")
+        print(f"[DEBUG]   OPERATOR: {operator}")
+        print(f"[DEBUG]   SERVICE: {service}")
+        print(f"[DEBUG] ========================================")
         
         if not api_key:
-            print("❌ API_KEY not found in environment")
+            print("❌ API_KEY not found in environment variables")
+            print(f"[DEBUG] Available environment variables with 'API': {[k for k in os.environ.keys() if 'API' in k]}")
             browser.close()
             sys.exit(1)  # Exit with failure code
         
+        if not api_url:
+            print("❌ API_URL not found in environment variables")
+            browser.close()
+            sys.exit(1)  # Exit with failure code
+        
+        print(f"[DEBUG] Step 2: API configuration validated successfully")
+        print(f"[DEBUG] Step 3: Proceeding to request phone number from API...")
+        
         # Get phone number from API
         print("📱 Requesting phone number from API...")
+        print(f"[DEBUG] Step 4: Calling get_number() with:")
+        print(f"[DEBUG]   service={service}")
+        print(f"[DEBUG]   country={country}")
+        print(f"[DEBUG]   operator={operator}")
+        print(f"[DEBUG]   api_key={api_key[:4] + '...' + api_key[-4:] if len(api_key) > 8 else '****'}")
+        print(f"[DEBUG]   base_url={api_url}")
         number_result = get_number(
             service=service,
             country=country,
@@ -392,6 +461,7 @@ def main():
             api_key=api_key,
             base_url=api_url
         )
+        print(f"[DEBUG] Step 5: get_number() returned: {number_result}")
         if not number_result:
             print("❌ Failed to get phone number from API")
             browser.close()
@@ -499,6 +569,13 @@ def main():
         # PRODUCT
         # -----------------------------
         primary_product_url = os.environ.get('PRIMARY_PRODUCT_URL', '')
+        # -----------------------------
+        # PRODUCT FALLBACK SYSTEM
+        # -----------------------------
+        # -----------------------------
+        # PRODUCT FALLBACK SYSTEM
+        # -----------------------------
+        primary_product_url = os.environ.get('PRIMARY_PRODUCT_URL', '')
         secondary_product_url = os.environ.get('SECONDARY_PRODUCT_URL', '')
         third_product_url = os.environ.get('THIRD_PRODUCT_URL', '')
         
@@ -506,37 +583,39 @@ def main():
         if not primary_product_url or not primary_product_url.strip():
             print("❌ Primary product URL is required but not configured")
             browser.close()
-            sys.exit(1)  # Exit with error code to stop worker
+            sys.exit(1)  # Exit with generic error code
         
-        # Build URL list: Primary → Secondary → Third (always in this order)
-        product_urls = [primary_product_url]
+        # Build URL list: Primary → Secondary → Third
+        product_urls = [primary_product_url.strip()]
         if secondary_product_url and secondary_product_url.strip():
-            product_urls.append(secondary_product_url)
+            product_urls.append(secondary_product_url.strip())
         if third_product_url and third_product_url.strip():
-            product_urls.append(third_product_url)
+            product_urls.append(third_product_url.strip())
         
-        # Try each URL until one works
-        cart_ready = False
-        for idx, product_url in enumerate(product_urls):
+        print(f"📋 Found {len(product_urls)} product URLs to try")
+        
+        cart_success = False
+        
+        for i, url in enumerate(product_urls):
+            print(f"🔄 [Attempt {i+1}/{len(product_urls)}] Trying product: {url}")
+            
             try:
-                print(f"🛒 Trying product URL {idx + 1}/{len(product_urls)}: {product_url}")
-                cart_ready = add_product_and_check_cart(page, product_url)
-                if cart_ready:
-                    print("✅ Cart is ready to proceed")
+                # Use the helper function which now includes OOS checks
+                if add_product_and_check_cart(page, url):
+                    print(f"✅ Product secured from URL #{i+1}")
+                    cart_success = True
                     break
-                elif idx < len(product_urls) - 1:
-                    print("🔄 Trying next URL...")
+                else:
+                    print(f"⚠️ Product URL #{i+1} failed OOS/Availability check. Trying next...")
             except Exception as e:
-                print(f"⚠️ Failed to add product from URL {idx + 1}: {e}")
-                if idx < len(product_urls) - 1:
-                    print("🔄 Trying next URL...")
-                    continue
-        
-        if not cart_ready:
-            print("❌ All product URLs failed - cannot proceed")
+                print(f"❌ Error processing URL #{i+1}: {e}")
+                continue
+
+        if not cart_success:
+            print("🚨 CRITICAL: All product URLs failed! Stopping automation.")
             page.screenshot(path="all_products_failed.png")
             browser.close()
-            sys.exit(1)  # Exit with error code to stop all workers
+            sys.exit(5)  # SPECIAL EXIT CODE 5 -> SIGNALS WORKER MANAGER TO STOP ALL WORKERS
         
         time.sleep(1)
 
@@ -644,13 +723,6 @@ def main():
             except:
                 pass
             
-            # Check if button is enabled
-            try:
-                is_enabled = place_btn.is_enabled()
-                print(f"Button enabled: {is_enabled}")
-            except:
-                pass
-            
             # Try clicking with multiple methods
             success = False
             
@@ -689,50 +761,82 @@ def main():
                 except Exception as e:
                     print(f"Dispatch click failed: {e}")
             
-            if not success:
+            if success:
+                print("🎉 PLACE ORDER TRIGGERED - MARKING SUCCESS")
+                # Wait briefly to check for immediate error (e.g. backend failure toast)
+                time.sleep(2)
+                
+                # Take screenshot immediately regardless of outcome
+                screenshot_filename = f"order_result_{int(time.time())}.png"
+                try:
+                    page.screenshot(path=screenshot_filename)
+                    print(f"📸 Screenshot taken: {screenshot_filename}")
+                except Exception as e:
+                    print(f"⚠️ Failed to take screenshot: {e}")
+                    screenshot_filename = None
+
+                # Check for common error texts
+                error_texts = ["Something went wrong", "Out of Stock", "Not available", "Sold Out"]
+                error_found = False
+                error_reason = ""
+                for txt in error_texts:
+                    if page.locator(f"text={txt}").count() > 0:
+                        if page.locator(f"text={txt}").first.is_visible():
+                            print(f"❌ Error detected after place order: {txt}")
+                            error_found = True
+                            error_reason = txt
+                            break
+                
+                # Determine status
+                status = "Success" if not error_found else f"Failed - {error_reason}"
+                
+                # Upload and Log
+                screenshot_url = "N/A"
+                if screenshot_filename:
+                    print("☁️ Uploading screenshot to ImgBB...")
+                    uploaded_url = upload_image_to_imgbb(screenshot_filename)
+                    if uploaded_url:
+                        screenshot_url = uploaded_url
+                        print(f"✅ Screenshot uploaded: {screenshot_url}")
+                    else:
+                        print("⚠️ Screenshot upload failed")
+                        screenshot_url = "UPLOAD_FAILED"
+                
+                # Log to CSV
+                try:
+                    csv_file = "my_orders.csv"
+                    file_exists = os.path.isfile(csv_file)
+                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    
+                    with open(csv_file, mode='a', newline='', encoding='utf-8') as f:
+                        writer = csv.writer(f)
+                        if not file_exists:
+                            writer.writerow(["Timestamp", "Screenshot URL", "Status"])
+                        writer.writerow([timestamp, screenshot_url, status])
+                    print(f"📝 Order info logged to {csv_file}")
+                except Exception as e:
+                    print(f"❌ Failed to log to CSV: {e}")
+
+                if not error_found:
+                    print("✅ No errors detected after placement.")
+                    print("TRIGGER_ORDER_SUCCESS") 
+                    browser.close()
+                    sys.exit(0) # SUCCESS EXIT
+                else:
+                    print("❌ Order failed due to post-click error")
+                    browser.close()
+                    sys.exit(1) # FAIL EXIT
+            
+            else:
                 print("❌ All click methods failed!")
                 page.screenshot(path="place_order_failed.png")
+                browser.close()
+                sys.exit(1)
         else:
             print("❌ Could not find place order button!")
             page.screenshot(path="button_not_found.png")
-
-        time.sleep(5)
-
-        # -----------------------------
-        # VERIFY ORDER
-        # -----------------------------
-        # Wait for navigation to order success page after place order button is clicked
-        print("⏳ Waiting for order confirmation...")
-        time.sleep(5)  # Give time for page to navigate
-        
-        # Check URL multiple times to ensure we get the final URL
-        max_checks = 3
-        order_successful = False
-        current_url = ""
-        
-        for i in range(max_checks):
-            time.sleep(2)
-            current_url = page.url
-            url_lower = current_url.lower()
-            print(f"🔍 Check {i+1}/{max_checks} - Current URL: {current_url}")
-            
-            # Check if URL contains order-success (case-insensitive)
-            if "order-success" in url_lower:
-                order_successful = True
-                print(f"✅ Order success detected in URL: {current_url}")
-                break
-        
-        if order_successful:
-            print("🎉 ORDER SUCCESSFUL!")
-            page.screenshot(path="order_success.png")
             browser.close()
-            sys.exit(0)  # Exit with success code
-        else:
-            print("❌ ORDER FAILED")
-            print(f"Final URL: {current_url}")
-            page.screenshot(path="order_failed.png")
-            browser.close()
-            sys.exit(1)  # Exit with failure code
+            sys.exit(1)
         
         # This should never be reached, but just in case
         browser.close()

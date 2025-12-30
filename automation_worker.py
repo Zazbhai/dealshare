@@ -260,7 +260,7 @@ def main():
                         del output_threads[order_num]
                     
                     # If process failed with exit code 1 (all product URLs failed), stop all workers immediately
-                    if return_code == 1:
+                    if return_code == 5:
                         print(f"[CRITICAL] Order {order_num} failed - all product URLs failed. Stopping all workers immediately...")
                         write_to_log(f"[CRITICAL] Order {order_num} failed - all product URLs failed. Stopping all workers immediately...", worker_id=order_num)
                         should_stop_all = True

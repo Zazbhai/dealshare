@@ -1,5 +1,7 @@
 from playwright.sync_api import sync_playwright, TimeoutError
 import time
+import sys
+import os
 from api_dynamic import get_number, get_otp, cancel_number
 
 
@@ -275,50 +277,81 @@ def click_add_button(page):
 
 def add_product_and_check_cart(page, product_url):
     """
-    Add product to cart and check for removal notice
+    Add product to cart and check for removal notice and OOS
     Returns True if cart is ready to proceed, False if needs retry with different product
     """
     print(f"🛒 Opening product page: {product_url}")
-    page.goto(product_url, timeout=60000)
+    try:
+        page.goto(product_url, timeout=45000)
+    except Exception as e:
+        print(f"⚠️ Failed to load page: {e}")
+        return False
+        
     time.sleep(1)
 
-    click_add_button(page)
-    print("✅ Product added to cart")
+    # -----------------------------
+    # FAST OOS CHECK
+    # -----------------------------
+    # Check for immediate "Out of Stock" indicators
+    oos_indicators = ["Currently Unavailable", "Notify Me", "Out of Stock", "Sold Out"]
+    for indicator in oos_indicators:
+        if page.locator(f"text={indicator}").count() > 0:
+            if page.locator(f"text={indicator}").first.is_visible():
+                print(f"⚠️ Product is Out of Stock ('{indicator}' detected)")
+                return False
+
+    # -----------------------------
+    # ADD TO CART
+    # -----------------------------
+    try:
+        click_add_button(page)
+        print("✅ Added to cart (initially)")
+    except Exception as e:
+        print(f"⚠️ Failed to click Add button (likely OOS or page changed): {e}")
+        return False
+
     time.sleep(3)
 
     # -----------------------------
     # CART CHECK
     # -----------------------------
     print("🛍️ Opening cart...")
-    page.locator("img[src*='bag']").first.click(force=True)
-    print("✅ Clicked bag icon")
+    try:
+        page.locator("img[src*='bag']").first.click(force=True)
+        print("✅ Clicked bag icon")
+    except Exception as e:
+        print(f"⚠️ Failed to click bag icon: {e}")
+        return False
+        
     time.sleep(2)
 
     # Check for "Remove Items & Proceed" text
     remove_text_options = [
         "Remove Items & Proceed",
         "Remove Items",
-        "Remove Item & Proceed"
+        "Remove Item & Proceed",
+        "Remove Item"
     ]
     
-    found_remove_text = False
     for text in remove_text_options:
         if page.locator(f"text={text}").count() > 0:
-            print(f"⚠️ Found '{text}' - Product needs to be removed")
-            found_remove_text = True
+            if page.locator(f"text={text}").first.is_visible():
+                print(f"⚠️ Found '{text}' - Product needs to be removed (Delivery not available)")
+                
+                # Try to cleanly remove it before failing, so next product has clean slate? 
+                # Actually, better to just fail and let next product flow handle its own state, 
+                # but clicking remove is safer to clear the bad state.
+                try:
+                    remove_btn = page.locator(f"text={text}").first
+                    if robust_click(page, remove_btn, method="locator"):
+                        print("✅ Clicked remove button to clear bad state")
+                        time.sleep(1)
+                except:
+                    pass
+                
+                return False  # Return False because this product failed
             
-            # Click the remove button
-            try:
-                remove_btn = page.locator(f"text={text}").first
-                if robust_click(page, remove_btn, method="locator"):
-                    print("✅ Clicked remove button")
-                    time.sleep(2)
-            except Exception as e:
-                print(f"⚠️ Could not click remove button: {e}")
-            
-            break
-    
-    return not found_remove_text  # Return True if no removal needed
+    return True  # Return True if no removal needed
 
 
 
@@ -400,22 +433,39 @@ def main():
         # -----------------------------
         # PRODUCT
         # -----------------------------
-        primary_product_url = "https://www.dealshare.in/pname/Pears-Pure-&-Gentle-Bathing-Soap---125-Gm-(Pack-Of-3)/pid/BAU1943"
-        secondary_product_url = "https://www.dealshare.in/pname/Dabur-Almond-Hair-Oil---485-Ml-+-Small-Pack-Free/pid/BAU1391"  # Change this URL
+        # -----------------------------
+        # PRODUCT FALLBACK SYSTEM
+        # -----------------------------
+        # Hardcoded for testing, but using list structure
+        product_urls = [
+            "https://www.dealshare.in/pname/Pears-Pure-&-Gentle-Bathing-Soap---125-Gm-(Pack-Of-3)/pid/BAU1943",
+            "https://www.dealshare.in/pname/Dabur-Almond-Hair-Oil---485-Ml-+-Small-Pack-Free/pid/BAU1391"
+        ]
             
-            # Try primary product
-        cart_ready = add_product_and_check_cart(page, primary_product_url)
+        print(f"📋 Found {len(product_urls)} product URLs to try")
+        
+        cart_success = False
+        
+        for i, url in enumerate(product_urls):
+            print(f"🔄 [Attempt {i+1}/{len(product_urls)}] Trying product: {url}")
             
-            # If primary product had issues, try secondary product
-        if not cart_ready:
-                print("🔄 Trying secondary product...")
-                cart_ready = add_product_and_check_cart(page, secondary_product_url)
-                
-                if not cart_ready:
-                    print("❌ Both products failed - cannot proceed")
-                    page.screenshot(path="both_products_failed.png")
-                    browser.close()
-                    return
+            try:
+                # Use the robust helper function
+                if add_product_and_check_cart(page, url):
+                    print(f"✅ Product secured from URL #{i+1}")
+                    cart_success = True
+                    break
+                else:
+                    print(f"⚠️ Product URL #{i+1} failed OOS/Availability check. Trying next...")
+            except Exception as e:
+                print(f"❌ Error processing URL #{i+1}: {e}")
+                continue
+
+        if not cart_success:
+            print("🚨 CRITICAL: All product URLs failed! Stopping logic.")
+            page.screenshot(path="all_products_failed.png")
+            browser.close()
+            sys.exit(5)
             
         print("✅ Cart is ready to proceed")
         time.sleep(1)
@@ -525,13 +575,6 @@ def main():
             except:
                 pass
             
-            # Check if button is enabled
-            try:
-                is_enabled = place_btn.is_enabled()
-                print(f"Button enabled: {is_enabled}")
-            except:
-                pass
-            
             # Try clicking with multiple methods
             success = False
             
@@ -570,14 +613,48 @@ def main():
                 except Exception as e:
                     print(f"Dispatch click failed: {e}")
             
-            if not success:
+            if success:
+                print("🎉 PLACE ORDER TRIGGERED - MARKING SUCCESS")
+                # Wait briefly to check for immediate error (e.g. backend failure toast)
+                time.sleep(4)
+                
+                # Check for common error texts
+                error_texts = ["Something went wrong", "Out of Stock", "Not available", "Sold Out"]
+                error_found = False
+                for txt in error_texts:
+                    if page.locator(f"text={txt}").count() > 0:
+                        if page.locator(f"text={txt}").first.is_visible():
+                            print(f"❌ Error detected after place order: {txt}")
+                            error_found = True
+                            break
+                            
+                if not error_found:
+                    print("✅ No errors detected after placement.")
+                    print("TRIGGER_ORDER_SUCCESS") 
+                    
+                    # Optional: Take a screenshot for records
+                    try:
+                        page.screenshot(path="order_placed_trigger.png")
+                    except: pass
+                    
+                    browser.close()
+                    sys.exit(0) # SUCCESS EXIT
+                else:
+                    print("❌ Order failed due to post-click error")
+                    page.screenshot(path="order_error_popup.png")
+                    browser.close()
+                    sys.exit(1) # FAIL EXIT
+            
+            else:
                 print("❌ All click methods failed!")
                 page.screenshot(path="place_order_failed.png")
+                browser.close()
+                sys.exit(1)
         else:
             print("❌ Could not find place order button!")
             page.screenshot(path="button_not_found.png")
-
-        time.sleep(5)
+            browser.close()
+            sys.exit(1)
 
         # -----------------------------
         # VERIFY ORDER

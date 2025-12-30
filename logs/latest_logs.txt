@@ -1,54 +1,73 @@
-[2025-12-30 13:53:28] [INFO] Starting automation: 1 orders, max 1 parallel windows
-[2025-12-30 13:53:33] [ORDER 1 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
-[2025-12-30 13:53:35] [ORDER 1 STDOUT] 📍 Attempt 1/3
-[2025-12-30 13:53:35] [ORDER 1 STDOUT] 👤 Attempting to click user icon...
-[2025-12-30 13:53:38] [ORDER 1 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
-[2025-12-30 13:53:39] [ORDER 1 STDOUT] ✅ User icon clicked (regular)
-[2025-12-30 13:53:40] [ORDER 1 STDOUT] 📱 Requesting phone number from API...
-[2025-12-30 13:53:41] [ORDER 1 STDERR] Traceback (most recent call last):
-[2025-12-30 13:53:41] [ORDER 1 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\api_dynamic.py", line 43, in _http_get
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     with request.urlopen(url, timeout=15) as resp:
-[2025-12-30 13:53:41] [ORDER 1 STDERR]          ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
-[2025-12-30 13:53:41] [ORDER 1 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\urllib\request.py", line 189, in urlopen
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     return opener.open(url, data, timeout)
-[2025-12-30 13:53:41] [ORDER 1 STDERR]            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
-[2025-12-30 13:53:41] [ORDER 1 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\urllib\request.py", line 495, in open
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     response = meth(req, response)
-[2025-12-30 13:53:41] [ORDER 1 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\urllib\request.py", line 604, in http_response
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     response = self.parent.error(
-[2025-12-30 13:53:41] [ORDER 1 STDERR]         'http', request, response, code, msg, hdrs)
-[2025-12-30 13:53:41] [ORDER 1 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\urllib\request.py", line 533, in error
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     return self._call_chain(*args)
-[2025-12-30 13:53:41] [ORDER 1 STDERR]            ~~~~~~~~~~~~~~~~^^^^^^^
-[2025-12-30 13:53:41] [ORDER 1 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\urllib\request.py", line 466, in _call_chain
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     result = func(*args)
-[2025-12-30 13:53:41] [ORDER 1 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\urllib\request.py", line 613, in http_error_default
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     raise HTTPError(req.full_url, code, msg, hdrs, fp)
-[2025-12-30 13:53:41] [ORDER 1 STDERR] urllib.error.HTTPError: HTTP Error 401: Unauthorized
-[2025-12-30 13:53:41] [ORDER 1 STDERR] 
-[2025-12-30 13:53:41] [ORDER 1 STDERR] The above exception was the direct cause of the following exception:
-[2025-12-30 13:53:41] [ORDER 1 STDERR] 
-[2025-12-30 13:53:41] [ORDER 1 STDERR] Traceback (most recent call last):
-[2025-12-30 13:53:41] [ORDER 1 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 717, in <module>
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     main()
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     ~~~~^^
-[2025-12-30 13:53:41] [ORDER 1 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 388, in main
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     number_result = get_number(
-[2025-12-30 13:53:41] [ORDER 1 STDERR]         service=service,
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     ...<3 lines>...
-[2025-12-30 13:53:41] [ORDER 1 STDERR]         base_url=api_url
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     )
-[2025-12-30 13:53:41] [ORDER 1 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\api_dynamic.py", line 139, in get_number
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     raw = _http_get(
-[2025-12-30 13:53:41] [ORDER 1 STDERR]         {
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     ...<6 lines>...
-[2025-12-30 13:53:41] [ORDER 1 STDERR]         base_url
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     )
-[2025-12-30 13:53:41] [ORDER 1 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\api_dynamic.py", line 61, in _http_get
-[2025-12-30 13:53:41] [ORDER 1 STDERR]     raise ValueError(f"API HTTP {exc.code}: {exc.reason}") from exc
-[2025-12-30 13:53:41] [ORDER 1 STDERR] ValueError: API HTTP 401: Unauthorized
-[2025-12-30 13:53:41] [INFO] Order 1 completed (FAILED, return_code=1) - 1/1 total
-[2025-12-30 13:53:41] [CRITICAL] Order 1 failed - all product URLs failed. Stopping all workers immediately...
-[2025-12-30 13:53:42] [INFO] All 1 orders completed!
-[2025-12-30 13:53:42] [INFO] Final stats: Success=0, Failure=1
-[2025-12-30 13:53:42] [DEBUG] ========== AUTOMATION WORKER FINISHED ==========
+[2025-12-30 15:41:21] [INFO] Starting automation: 1 orders, max 1 parallel windows
+[2025-12-30 15:41:27] [ORDER 1 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2025-12-30 15:41:29] [ORDER 1 STDOUT] 📍 Attempt 1/3
+[2025-12-30 15:41:29] [ORDER 1 STDOUT] 👤 Attempting to click user icon...
+[2025-12-30 15:41:32] [ORDER 1 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2025-12-30 15:41:33] [ORDER 1 STDOUT] ✅ User icon clicked (regular)
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG]   API_KEY: SET
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG]   API_KEY (masked): AtnE********************************os3g (length: 40)
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG]   API_URL: https://meowsms.shop/stubs/handler_api.php
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG]   COUNTRY: 22
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG]   OPERATOR: 12
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG]   SERVICE: dealshare
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG] ========================================
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] 📱 Requesting phone number from API...
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG]   service=dealshare
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG]   country=22
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG]   operator=12
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG]   api_key=AtnE...os3g
+[2025-12-30 15:41:34] [ORDER 1 STDOUT] [DEBUG]   base_url=https://meowsms.shop/stubs/handler_api.php
+[2025-12-30 15:41:35] [ORDER 1 STDOUT] [DEBUG] Step 5: get_number() returned: ('6953a555d4bddd37d009fea5', '9083642550')
+[2025-12-30 15:41:35] [ORDER 1 STDOUT] ✅ Got phone number: 9083642550 (request_id: 6953a555d4bddd37d009fea5)
+[2025-12-30 15:41:35] [ORDER 1 STDOUT] ⏳ Waiting for OTP (max 2 minutes)...
+[2025-12-30 15:41:47] [ORDER 1 STDOUT] ✅ Got OTP: 5442
+[2025-12-30 15:41:49] [ORDER 1 STDOUT] 🔘 Clicking Verify OTP button...
+[2025-12-30 15:41:50] [ORDER 1 STDOUT] ✅ Verify OTP clicked (regular)
+[2025-12-30 15:41:51] [ORDER 1 STDOUT] 🔄 Cancelling number after OTP entry...
+[2025-12-30 15:41:53] [ORDER 1 STDOUT] ✅ Number cancelled: ACCESS_ACTIVATION
+[2025-12-30 15:41:53] [ORDER 1 STDOUT] ✅ LOGIN SUCCESSFUL
+[2025-12-30 15:41:53] [ORDER 1 STDOUT] 📋 Found 3 product URLs to try
+[2025-12-30 15:41:53] [ORDER 1 STDOUT] 🔄 [Attempt 1/3] Trying product: https://www.dealshare.in/pname/Good-Vibes-Enduro-500x-Grass-Floor-Broom-%7C-Hand-Made-Grass-Broom-for-Home-Cleaning/pid/BAU6093
+[2025-12-30 15:41:53] [ORDER 1 STDOUT] 🛒 Opening product page: https://www.dealshare.in/pname/Good-Vibes-Enduro-500x-Grass-Floor-Broom-%7C-Hand-Made-Grass-Broom-for-Home-Cleaning/pid/BAU6093
+[2025-12-30 15:41:55] [ORDER 1 STDOUT] 🔘 Attempting to click ADD button...
+[2025-12-30 15:41:58] [ORDER 1 STDOUT] ✅ ADD clicked via container
+[2025-12-30 15:41:59] [ORDER 1 STDOUT] ✅ Added to cart (initially)
+[2025-12-30 15:42:02] [ORDER 1 STDOUT] 🛍️ Opening cart...
+[2025-12-30 15:42:02] [ORDER 1 STDOUT] ✅ Clicked bag icon
+[2025-12-30 15:42:04] [ORDER 1 STDOUT] ⚠️ Found 'Remove Items & Proceed' - Product needs to be removed (Delivery not available)
+[2025-12-30 15:42:05] [ORDER 1 STDOUT] ✅ Clicked remove button to clear bad state
+[2025-12-30 15:42:06] [ORDER 1 STDOUT] ⚠️ Product URL #1 failed OOS/Availability check. Trying next...
+[2025-12-30 15:42:06] [ORDER 1 STDOUT] 🔄 [Attempt 2/3] Trying product: https://www.dealshare.in/pname/Sunfeast-Gluco-Plus-Biscuit---1-Kg/pid/BAU317
+[2025-12-30 15:42:06] [ORDER 1 STDOUT] 🛒 Opening product page: https://www.dealshare.in/pname/Sunfeast-Gluco-Plus-Biscuit---1-Kg/pid/BAU317
+[2025-12-30 15:42:09] [ORDER 1 STDOUT] 🔘 Attempting to click ADD button...
+[2025-12-30 15:42:11] [ORDER 1 STDOUT] ✅ ADD clicked via container
+[2025-12-30 15:42:12] [ORDER 1 STDOUT] ✅ Added to cart (initially)
+[2025-12-30 15:42:15] [ORDER 1 STDOUT] 🛍️ Opening cart...
+[2025-12-30 15:42:16] [ORDER 1 STDOUT] ✅ Clicked bag icon
+[2025-12-30 15:42:18] [ORDER 1 STDOUT] ✅ Product secured from URL #2
+[2025-12-30 15:42:19] [ORDER 1 STDOUT] ✅ Proceed to pay clicked
+[2025-12-30 15:42:21] [ORDER 1 STDOUT] 📝 Filling address details...
+[2025-12-30 15:42:25] [ORDER 1 STDOUT] 💾 Saving address...
+[2025-12-30 15:42:27] [ORDER 1 STDOUT] ✅ Address saved successfully
+[2025-12-30 15:42:30] [ORDER 1 STDOUT] 💳 Selecting payment method...
+[2025-12-30 15:42:31] [ORDER 1 STDOUT] ✅ COD selected
+[2025-12-30 15:42:33] [ORDER 1 STDOUT] 📦 Attempting to place order...
+[2025-12-30 15:42:33] [ORDER 1 STDOUT] Found button via class
+[2025-12-30 15:42:35] [ORDER 1 STDOUT] ✅ Place order clicked (regular)
+[2025-12-30 15:42:35] [ORDER 1 STDOUT] 🎉 PLACE ORDER TRIGGERED - MARKING SUCCESS
+[2025-12-30 15:42:37] [ORDER 1 STDOUT] 📸 Screenshot taken: order_result_1767089557.png
+[2025-12-30 15:42:37] [ORDER 1 STDOUT] ☁️ Uploading screenshot to ImgBB...
+[2025-12-30 15:42:40] [ORDER 1 STDOUT] [ERROR] Imgbb API returned status 400: {"status_code":400,"error":{"message":"Invalid API v1 key.","code":100},"status_txt":"Bad Request"}
+[2025-12-30 15:42:40] [ORDER 1 STDOUT] ⚠️ Screenshot upload failed
+[2025-12-30 15:42:40] [ORDER 1 STDOUT] 📝 Order info logged to my_orders.csv
+[2025-12-30 15:42:40] [ORDER 1 STDOUT] ✅ No errors detected after placement.
+[2025-12-30 15:42:40] [ORDER 1 STDOUT] TRIGGER_ORDER_SUCCESS
+[2025-12-30 15:42:41] [INFO] Order 1 completed (SUCCESS, return_code=0) - 1/1 total
+[2025-12-30 15:42:41] [INFO] All 1 orders completed!
+[2025-12-30 15:42:41] [INFO] Final stats: Success=1, Failure=0
+[2025-12-30 15:42:41] [DEBUG] ========== AUTOMATION WORKER FINISHED ==========

@@ -879,7 +879,12 @@ def automation_status():
                 status_data['all_products_failed'] = False
             return jsonify({
                 "success": True,
-                **status_data
+                "is_running": status_data.get('is_running', False),
+                "success_count": status_data.get('success', 0),
+                "failure_count": status_data.get('failure', 0),
+                "all_products_failed": status_data.get('all_products_failed', False),
+                "start_time": status_data.get('start_time'),
+                "end_time": status_data.get('end_time')
             })
         except Exception as e:
             print(f"[ERROR] Failed to read status file: {e}")
