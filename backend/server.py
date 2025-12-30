@@ -32,7 +32,12 @@ from models.global_settings import GlobalSettings
 from auth.jwt_auth import create_access_token, verify_token
 from backend.middleware import require_auth, require_admin
 
-app = Flask(__name__)
+# Determine if we're in production (Docker) or development
+_is_production = os.path.exists('/app/dist')  # Check if dist folder exists (Docker build)
+_static_folder = '/app/dist' if _is_production else None
+_static_url_path = '' if _is_production else None
+
+app = Flask(__name__, static_folder=_static_folder, static_url_path=_static_url_path)
 CORS(app, supports_credentials=True)
 
 
@@ -151,7 +156,6 @@ def update_settings():
             'third_product_quantity',
             'latitude',
             'longitude',
-            'current_location',
             'select_location_enabled',
             'search_input',
             'location_text'
@@ -1171,7 +1175,28 @@ def delete_user(user_id):
             "error": str(e)
         }), 500
 
+# Serve frontend in production
+if _is_production:
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_frontend(path):
+        if path and os.path.exists(os.path.join(app.static_folder, path)):
+            return app.send_static_file(path)
+        return app.send_static_file('index.html')
+
 if __name__ == '__main__':
     host = os.environ.get('BACKEND_HOST', '0.0.0.0')
     port = int(os.environ.get('BACKEND_PORT', '5000'))
-    app.run(debug=True, host=host, port=port)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    
+    # Use production WSGI server in Docker/production
+    if _is_production and not debug_mode:
+        try:
+            from waitress import serve
+            print(f"Starting production server on {host}:{port}")
+            serve(app, host=host, port=port, threads=4)
+        except ImportError:
+            print("waitress not installed, using Flask development server")
+            app.run(debug=False, host=host, port=port)
+    else:
+        app.run(debug=debug_mode, host=host, port=port)

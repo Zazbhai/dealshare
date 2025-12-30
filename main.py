@@ -1,4 +1,4 @@
-from playwright.sync_api import sync_playwright, TimeoutError
+from playwright.sync_api import sync_playwright, TimeoutError, Error as PlaywrightError
 import time
 import os
 import sys
@@ -73,25 +73,34 @@ def select_location(page, search_query=None, location_text_to_select=None):
     if location_text_to_select is None:
         location_text_to_select = os.environ.get('LOCATION_TEXT', 'Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India')
 
-    # Click "Type Manually"
-    page.wait_for_selector("button:has-text('Type Manually')", timeout=7000)
-    page.click("button:has-text('Type Manually')")
+    try:
+        # Click "Type Manually"
+        page.wait_for_selector("button:has-text('Type Manually')", timeout=7000)
+        page.click("button:has-text('Type Manually')")
 
-    # Search location
-    search_input = page.locator("input#google-search")
-    search_input.wait_for()
-    search_input.fill(search_query)
-    print(f"🔍 Searching for location: {search_query}")
+        # Search location
+        search_input = page.locator("input#google-search")
+        search_input.wait_for()
+        search_input.fill(search_query)
+        print(f"🔍 Searching for location: {search_query}")
 
-    # Select exact location
-    print(f"📍 Selecting location: {location_text_to_select}")
-    page.wait_for_selector(f"text={location_text_to_select}", timeout=7000)
-    page.click(f"text={location_text_to_select}")
+        # Select exact location
+        print(f"📍 Selecting location: {location_text_to_select}")
+        page.wait_for_selector(f"text={location_text_to_select}", timeout=7000)
+        page.click(f"text={location_text_to_select}")
 
-    # Confirm delivery
-    page.wait_for_selector("button:has-text('Confirm Delivery Location')", timeout=7000)
-    page.click("button:has-text('Confirm Delivery Location')")
-    print("✅ Confirm Address pressed!")
+        # Confirm delivery
+        page.wait_for_selector("button:has-text('Confirm Delivery Location')", timeout=7000)
+        page.click("button:has-text('Confirm Delivery Location')")
+        print("✅ Confirm Address pressed!")
+    except (PlaywrightError, Exception) as e:
+        error_msg = str(e)
+        if "Target page" in error_msg or "TargetClosedError" in error_msg or "has been closed" in error_msg:
+            print(f"❌ Location selection failed: Page/context/browser was closed")
+            raise Exception("Page closed during location selection")
+        else:
+            print(f"❌ Location selection error: {error_msg}")
+            raise
 
 def click_user_icon(page):
     """Robust user icon clicking with multiple fallbacks"""
@@ -392,12 +401,84 @@ def add_product_and_check_cart(page, product_url, quantity=1):
 
     time.sleep(1)
 
+    # -----------------------------
+    # CART CHECK
+    # -----------------------------
+    print("🛍️ Opening cart...")
+    try:
+        page.locator("img[src*='bag']").first.click(force=True)
+        print("✅ Clicked bag icon")
+    except Exception as e:
+        print(f"⚠️ Failed to click bag icon: {e}")
+        return False
+        
+    time.sleep(2)
+
+    # Check for "Remove Items & Proceed" text
+    remove_text_options = [
+        "Remove Items & Proceed",
+        "Remove Items",
+        "Remove Item & Proceed",
+        "Remove Item"
+    ]
+    
+    for text in remove_text_options:
+        if page.locator(f"text={text}").count() > 0:
+            if page.locator(f"text={text}").first.is_visible():
+                print(f"⚠️ Found '{text}' - Product needs to be removed (Delivery not available)")
+                
+                # Try to cleanly remove it before failing, so next product has clean slate? 
+                # Actually, better to just fail and let next product flow handle its own state, 
+                # but clicking remove is safer to clear the bad state.
+                try:
+                    remove_btn = page.locator(f"text={text}").first
+                    if robust_click(page, remove_btn, method="locator"):
+                        print("✅ Clicked remove button to clear bad state")
+                        time.sleep(1)
+                except:
+                    pass
+                
+                return False  # Return False because this product failed
+            
+    return True  # Return True if no removal needed
+
 # =========================
 # MAIN
 # =========================
 def main():
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False, slow_mo=300)
+        # Launch browser with optimized settings for parallel execution
+        # Added explicit stability arguments to prevent crashes in parallel mode
+        try:
+            # Detect if running in Docker/headless environment
+            is_docker = os.path.exists('/.dockerenv') or os.environ.get('DOCKER_CONTAINER') == 'true'
+            
+            browser_args = [
+                '--disable-blink-features=AutomationControlled',
+                '--disable-dev-shm-usage',  # Key for reducing memory crashes in Docker/Parallel
+                '--disable-gpu',
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-web-security',
+                '--disable-features=IsolateOrigins,site-per-process',
+            ]
+            
+            # Add Docker-specific optimizations
+            if is_docker:
+                browser_args.extend([
+                    '--no-zygote',
+                    '--single-process',
+                    '--disable-software-rasterizer',
+                ])
+            
+            browser = p.chromium.launch(
+                headless=is_docker,  # Headless in Docker, visible in local dev
+                slow_mo=0,  # No delay for better performance
+                args=browser_args
+            )
+        except Exception as e:
+            print(f"❌ CRITICAL: Failed to launch browser: {e}")
+            sys.exit(1)
 
         # Get location settings from environment
         latitude = float(os.environ.get('LATITUDE', '26.994880'))
@@ -428,15 +509,22 @@ def main():
             try:
                 print("➡ Trying normal location flow...")
                 select_location(page, search_input, location_text)
-            except TimeoutError:
-                print("⚠ Location selection failed, retrying...")
-
-                # Click address bar fallback
-                page.wait_for_selector("p.Address_addressBold__GlDKW", timeout=8000)
-                page.click("p.Address_addressBold__GlDKW")
-
-                time.sleep(1)
-                select_location(page, search_input, location_text)
+            except (TimeoutError, PlaywrightError, Exception) as e:
+                error_msg = str(e)
+                if "Page closed" in error_msg or "TargetClosedError" in error_msg or "has been closed" in error_msg:
+                    print(f"❌ Location selection failed: Page was closed. Cannot continue.")
+                    raise
+                
+                print(f"⚠ Location selection failed, retrying... Error: {error_msg}")
+                try:
+                    # Click address bar fallback
+                    page.wait_for_selector("p.Address_addressBold__GlDKW", timeout=8000)
+                    page.click("p.Address_addressBold__GlDKW")
+                    time.sleep(1)
+                    select_location(page, search_input, location_text)
+                except (TimeoutError, PlaywrightError, Exception) as retry_error:
+                    print(f"❌ Location selection retry also failed: {retry_error}")
+                    raise
         else:
             print("⏭️ Location selection step skipped (disabled in settings)")
 

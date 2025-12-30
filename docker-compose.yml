@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deal-share-automation
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      - BACKEND_HOST=0.0.0.0
+      - BACKEND_PORT=5000
+      - DOCKER_CONTAINER=true
+      - FLASK_DEBUG=${FLASK_DEBUG:-false}
+      - MONGO_URI=${MONGO_URI:-mongodb://localhost:27017/}
+      - DB_NAME=${DB_NAME:-dealshare_automation}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-secret-key-change-in-production-make-it-long-and-random}
+    volumes:
+      - ./logs:/app/logs
+      - ./my_orders.csv:/app/my_orders.csv
+      - ./automation_status.json:/app/automation_status.json
+    restart: unless-stopped
+    shm_size: 2gb
+    # Security options for Playwright in Docker
+    security_opt:
+      - seccomp:unconfined
+    # Resource limits (adjust as needed)
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '1'
+          memory: 2G

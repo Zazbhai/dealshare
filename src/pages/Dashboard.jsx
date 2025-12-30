@@ -27,7 +27,6 @@ function Dashboard() {
     thirdProductQuantity: '1',
     latitude: '26.994880',
     longitude: '75.774836',
-    currentLocation: 'default',
     selectLocation: true, // Toggle for location selection step
     searchInput: 'chinu juice center', // Search query for location
     locationText: 'Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India' // Exact location text to select
@@ -43,9 +42,12 @@ function Dashboard() {
   const [showAllProductsFailedModal, setShowAllProductsFailedModal] = useState(false)
   const [completionStats, setCompletionStats] = useState({ success: 0, failure: 0 })
   const [realtimeStats, setRealtimeStats] = useState({ success: 0, failure: 0, total: 0 })
-  const [isEditMode, setIsEditMode] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false) // Global edit mode (for order details)
+  const [isProductLinksEditMode, setIsProductLinksEditMode] = useState(false) // Edit mode for product links
+  const [isLocationSettingsEditMode, setIsLocationSettingsEditMode] = useState(false) // Edit mode for location settings
   const [hasStarted, setHasStarted] = useState(false) // Track if automation has actually started
   const [isProductLinksOpen, setIsProductLinksOpen] = useState(false) // Track product links dropdown state
+  const [isLocationSettingsOpen, setIsLocationSettingsOpen] = useState(false) // Track location settings dropdown state
 
   useEffect(() => {
     loadInitialData()
@@ -55,6 +57,24 @@ function Dashboard() {
   }, [user])
 
   const loadAllDashboardSettings = () => {
+    // Load from localStorage first (if available)
+    const savedProductLinks = localStorage.getItem('savedProductLinks')
+    const savedLocationSettings = localStorage.getItem('savedLocationSettings')
+
+    let productLinksData = {}
+    let locationSettingsData = {}
+
+    try {
+      if (savedProductLinks) {
+        productLinksData = JSON.parse(savedProductLinks)
+      }
+      if (savedLocationSettings) {
+        locationSettingsData = JSON.parse(savedLocationSettings)
+      }
+    } catch (error) {
+      console.error('Failed to parse saved settings from localStorage:', error)
+    }
+
     if (user) {
       setFormData(prev => ({
         ...prev,
@@ -66,22 +86,124 @@ function Dashboard() {
         totalOrders: user.total_orders?.toString() || prev.totalOrders || '1',
         maxParallelWindows: user.max_parallel_windows?.toString() || prev.maxParallelWindows || '1',
         retryOrders: user.retry_orders !== undefined ? user.retry_orders : prev.retryOrders || false,
-        // Product URLs
-        primaryProductUrl: user.primary_product_url || prev.primaryProductUrl || '',
-        secondaryProductUrl: user.secondary_product_url || prev.secondaryProductUrl || '',
-        thirdProductUrl: user.third_product_url || prev.thirdProductUrl || '',
-        // Product Quantities
-        primaryProductQuantity: user.primary_product_quantity?.toString() || prev.primaryProductQuantity || '1',
-        secondaryProductQuantity: user.secondary_product_quantity?.toString() || prev.secondaryProductQuantity || '1',
-        thirdProductQuantity: user.third_product_quantity?.toString() || prev.thirdProductQuantity || '1',
-        // Location settings
-        latitude: user.latitude || prev.latitude || '26.994880',
-        longitude: user.longitude || prev.longitude || '75.774836',
-        currentLocation: user.current_location || prev.currentLocation || 'default',
-        selectLocation: user.select_location_enabled !== undefined ? user.select_location_enabled : prev.selectLocation !== undefined ? prev.selectLocation : true,
-        searchInput: user.search_input || prev.searchInput || 'chinu juice center',
-        locationText: user.location_text || prev.locationText || 'Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India'
+        // Product URLs - prefer localStorage, then user data, then defaults
+        primaryProductUrl: productLinksData.primaryProductUrl || user.primary_product_url || prev.primaryProductUrl || '',
+        secondaryProductUrl: productLinksData.secondaryProductUrl || user.secondary_product_url || prev.secondaryProductUrl || '',
+        thirdProductUrl: productLinksData.thirdProductUrl || user.third_product_url || prev.thirdProductUrl || '',
+        // Product Quantities - prefer localStorage, then user data, then defaults
+        primaryProductQuantity: productLinksData.primaryProductQuantity || user.primary_product_quantity?.toString() || prev.primaryProductQuantity || '1',
+        secondaryProductQuantity: productLinksData.secondaryProductQuantity || user.secondary_product_quantity?.toString() || prev.secondaryProductQuantity || '1',
+        thirdProductQuantity: productLinksData.thirdProductQuantity || user.third_product_quantity?.toString() || prev.thirdProductQuantity || '1',
+        // Location settings - prefer localStorage, then user data, then defaults
+        latitude: locationSettingsData.latitude || user.latitude || prev.latitude || '26.994880',
+        longitude: locationSettingsData.longitude || user.longitude || prev.longitude || '75.774836',
+        selectLocation: locationSettingsData.selectLocation !== undefined ? locationSettingsData.selectLocation : (user.select_location_enabled !== undefined ? user.select_location_enabled : prev.selectLocation !== undefined ? prev.selectLocation : true),
+        searchInput: locationSettingsData.searchInput || user.search_input || prev.searchInput || 'chinu juice center',
+        locationText: locationSettingsData.locationText || user.location_text || prev.locationText || 'Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India'
       }))
+    }
+  }
+
+  const handleSaveProductLinks = async () => {
+    try {
+      const productLinksData = {
+        primaryProductUrl: formData.primaryProductUrl,
+        secondaryProductUrl: formData.secondaryProductUrl,
+        thirdProductUrl: formData.thirdProductUrl,
+        primaryProductQuantity: formData.primaryProductQuantity,
+        secondaryProductQuantity: formData.secondaryProductQuantity,
+        thirdProductQuantity: formData.thirdProductQuantity
+      }
+
+      // Save to localStorage
+      localStorage.setItem('savedProductLinks', JSON.stringify(productLinksData))
+
+      // Save to backend
+      const settingsToSave = {
+        primary_product_url: formData.primaryProductUrl,
+        secondary_product_url: formData.secondaryProductUrl,
+        third_product_url: formData.thirdProductUrl,
+        primary_product_quantity: parseInt(formData.primaryProductQuantity) || 1,
+        secondary_product_quantity: parseInt(formData.secondaryProductQuantity) || 1,
+        third_product_quantity: parseInt(formData.thirdProductQuantity) || 1
+      }
+
+      const result = await updateSettings(settingsToSave)
+      if (result.success) {
+        await updateUserSettings(settingsToSave)
+        addLog('success', '✅ Product links saved successfully')
+        setIsProductLinksEditMode(false) // Exit edit mode
+      } else {
+        addLog('error', `❌ Failed to save product links: ${result.error}`)
+      }
+    } catch (error) {
+      addLog('error', `❌ Error saving product links: ${error.message}`)
+    }
+  }
+
+  const handleSaveLocationSettings = async () => {
+    try {
+      const locationSettingsData = {
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        selectLocation: formData.selectLocation !== undefined ? formData.selectLocation : true,
+        searchInput: formData.searchInput,
+        locationText: formData.locationText
+      }
+
+      // Save to localStorage
+      localStorage.setItem('savedLocationSettings', JSON.stringify(locationSettingsData))
+
+      // Save to backend
+      const settingsToSave = {
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        select_location_enabled: formData.selectLocation !== undefined ? formData.selectLocation : true,
+        search_input: formData.searchInput,
+        location_text: formData.locationText
+      }
+
+      const result = await updateSettings(settingsToSave)
+      if (result.success) {
+        await updateUserSettings(settingsToSave)
+        addLog('success', '✅ Location settings saved successfully')
+        setIsLocationSettingsEditMode(false) // Exit edit mode
+      } else {
+        addLog('error', `❌ Failed to save location settings: ${result.error}`)
+      }
+    } catch (error) {
+      addLog('error', `❌ Error saving location settings: ${error.message}`)
+    }
+  }
+
+  const handleSaveOrderDetails = async () => {
+    try {
+      const orderDetailsData = {
+        name: formData.name,
+        houseFlatNo: formData.houseFlatNo,
+        landmark: formData.landmark
+      }
+
+      // Save to localStorage
+      localStorage.setItem('savedOrderDetails', JSON.stringify(orderDetailsData))
+
+      // Save to backend
+      const settingsToSave = {
+        name: formData.name,
+        house_flat_no: formData.houseFlatNo,
+        landmark: formData.landmark
+      }
+
+      const result = await updateSettings(settingsToSave)
+      if (result.success) {
+        await updateUserSettings(settingsToSave)
+        addLog('success', '✅ Order details saved successfully')
+        setIsEditMode(false) // Exit edit mode
+      } else {
+        addLog('error', `❌ Failed to save order details: ${result.error}`)
+      }
+    } catch (error) {
+      addLog('error', `❌ Error saving order details: ${error.message}`)
     }
   }
 
@@ -103,49 +225,6 @@ function Dashboard() {
     }
   }
 
-  const handleToggleEditMode = async () => {
-    if (isEditMode) {
-      // Save all dashboard settings when exiting edit mode
-      try {
-        const settingsToSave = {
-          // Order details
-          name: formData.name,
-          house_flat_no: formData.houseFlatNo,
-          landmark: formData.landmark,
-          // Automation settings
-          total_orders: parseInt(formData.totalOrders) || 1,
-          max_parallel_windows: parseInt(formData.maxParallelWindows) || 1,
-          retry_orders: formData.retryOrders || false,
-          // Product URLs
-          primary_product_url: formData.primaryProductUrl,
-          secondary_product_url: formData.secondaryProductUrl,
-          third_product_url: formData.thirdProductUrl,
-          // Product Quantities
-          primary_product_quantity: parseInt(formData.primaryProductQuantity) || 1,
-          secondary_product_quantity: parseInt(formData.secondaryProductQuantity) || 1,
-          third_product_quantity: parseInt(formData.thirdProductQuantity) || 1,
-          // Location settings
-          latitude: formData.latitude,
-          longitude: formData.longitude,
-          current_location: formData.currentLocation,
-          select_location_enabled: formData.selectLocation !== undefined ? formData.selectLocation : true,
-          search_input: formData.searchInput,
-          location_text: formData.locationText
-        }
-        
-        const result = await updateSettings(settingsToSave)
-        if (result.success) {
-          await updateUserSettings(settingsToSave)
-          addLog('success', '✅ All dashboard settings saved successfully')
-        } else {
-          addLog('error', `❌ Failed to save settings: ${result.error}`)
-        }
-      } catch (error) {
-        addLog('error', `❌ Error saving settings: ${error.message}`)
-      }
-    }
-    setIsEditMode(!isEditMode)
-  }
 
   useEffect(() => {
     // Auto-scroll logs to bottom
@@ -628,29 +707,33 @@ function Dashboard() {
             >
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <h2 className="text-xl sm:text-2xl font-bold">Order Details</h2>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleToggleEditMode}
-                  disabled={isRunning}
-                  className={`p-2 rounded-lg transition-all flex items-center gap-2 ${isEditMode
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : 'bg-purple-600 hover:bg-purple-700 text-white'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  title={isEditMode ? 'Save changes' : 'Edit order details'}
-                >
+                <div className="flex items-center gap-2">
                   {isEditMode ? (
-                    <>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleSaveOrderDetails}
+                      disabled={isRunning}
+                      className="p-2 rounded-lg transition-all flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Save order details"
+                    >
                       <Save className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span className="text-xs sm:text-sm font-semibold hidden sm:inline">Save</span>
-                    </>
+                    </motion.button>
                   ) : (
-                    <>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setIsEditMode(true)}
+                      disabled={isRunning}
+                      className="p-2 rounded-lg transition-all flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Edit order details"
+                    >
                       <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span className="text-xs sm:text-sm font-semibold hidden sm:inline">Edit</span>
-                    </>
+                    </motion.button>
                   )}
-                </motion.button>
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -747,16 +830,14 @@ function Dashboard() {
                       </label>
                       <button
                         onClick={() => handleInputChange('retryOrders', !formData.retryOrders)}
-                        disabled={isRunning}
-                        className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed ${
-                          formData.retryOrders ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-600'
-                        }`}
+                        disabled={isRunning || !isLocationSettingsEditMode}
+                        className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed ${formData.retryOrders ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-600'
+                          }`}
                         type="button"
                       >
                         <span
-                          className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                            formData.retryOrders ? 'translate-x-8' : 'translate-x-1'
-                          }`}
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${formData.retryOrders ? 'translate-x-8' : 'translate-x-1'
+                            }`}
                         />
                       </button>
                     </div>
@@ -777,14 +858,14 @@ function Dashboard() {
               className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-blue-500/20 shadow-2xl mb-4 sm:mb-6 overflow-hidden"
             >
               {/* Dropdown Header */}
-              <motion.button
-                onClick={() => setIsProductLinksOpen(!isProductLinksOpen)}
-                disabled={isRunning}
-                className="w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
-                whileHover={!isRunning ? { scale: 1.01 } : {}}
-                whileTap={!isRunning ? { scale: 0.99 } : {}}
-              >
-                <div className="flex items-center gap-3">
+              <div className="w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 transition-all duration-300 group">
+                <motion.button
+                  onClick={() => setIsProductLinksOpen(!isProductLinksOpen)}
+                  disabled={isRunning}
+                  className="flex items-center gap-3 flex-1 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                  whileHover={!isRunning ? { scale: 1.01 } : {}}
+                  whileTap={!isRunning ? { scale: 0.99 } : {}}
+                >
                   <div className="p-2 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 transition-colors">
                     <Link2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
                   </div>
@@ -792,15 +873,47 @@ function Dashboard() {
                     <h2 className="text-lg sm:text-xl font-bold text-white">Product Links</h2>
                     <p className="text-xs sm:text-sm text-gray-400 mt-0.5">Configure your product URLs</p>
                   </div>
+                </motion.button>
+                <div className="flex items-center gap-2">
+                  {isProductLinksEditMode ? (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleSaveProductLinks()
+                      }}
+                      disabled={isRunning}
+                      className="p-2 rounded-lg transition-all bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-500/20"
+                      title="Save product links"
+                    >
+                      <Save className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setIsProductLinksEditMode(true)
+                      }}
+                      disabled={isRunning}
+                      className="p-2 rounded-lg transition-all bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20"
+                      title="Edit product links"
+                    >
+                      <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </motion.button>
+                  )}
+                  <motion.div
+                    animate={{ rotate: isProductLinksOpen ? 180 : 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="p-2 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors cursor-pointer"
+                    onClick={() => setIsProductLinksOpen(!isProductLinksOpen)}
+                  >
+                    <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
+                  </motion.div>
                 </div>
-                <motion.div
-                  animate={{ rotate: isProductLinksOpen ? 180 : 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="p-2 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors"
-                >
-                  <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
-                </motion.div>
-              </motion.button>
+              </div>
 
               {/* Dropdown Content */}
               <motion.div
@@ -832,7 +945,7 @@ function Dashboard() {
                         value={formData.primaryProductUrl}
                         onChange={(e) => handleInputChange('primaryProductUrl', e.target.value)}
                         placeholder="https://www.dealshare.in/pname/..."
-                        disabled={isRunning || !isEditMode}
+                        disabled={isRunning || !isProductLinksEditMode}
                         className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
                       />
                       <input
@@ -841,7 +954,7 @@ function Dashboard() {
                         value={formData.primaryProductQuantity}
                         onChange={(e) => handleInputChange('primaryProductQuantity', e.target.value)}
                         placeholder="Qty"
-                        disabled={isRunning || !isEditMode}
+                        disabled={isRunning || !isProductLinksEditMode}
                         className="w-20 px-3 py-2.5 sm:py-3 bg-black/40 border border-blue-500/50 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all text-center"
                       />
                     </div>
@@ -866,7 +979,7 @@ function Dashboard() {
                         value={formData.secondaryProductUrl}
                         onChange={(e) => handleInputChange('secondaryProductUrl', e.target.value)}
                         placeholder="https://www.dealshare.in/pname/..."
-                        disabled={isRunning || !isEditMode}
+                        disabled={isRunning || !isProductLinksEditMode}
                         className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
                       />
                       <input
@@ -875,7 +988,7 @@ function Dashboard() {
                         value={formData.secondaryProductQuantity}
                         onChange={(e) => handleInputChange('secondaryProductQuantity', e.target.value)}
                         placeholder="Qty"
-                        disabled={isRunning || !isEditMode}
+                        disabled={isRunning || !isProductLinksEditMode}
                         className="w-20 px-3 py-2.5 sm:py-3 bg-black/40 border border-purple-500/50 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all text-center"
                       />
                     </div>
@@ -900,7 +1013,7 @@ function Dashboard() {
                         value={formData.thirdProductUrl}
                         onChange={(e) => handleInputChange('thirdProductUrl', e.target.value)}
                         placeholder="https://www.dealshare.in/pname/..."
-                        disabled={isRunning || !isEditMode}
+                        disabled={isRunning || !isProductLinksEditMode}
                         className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
                       />
                       <input
@@ -909,7 +1022,7 @@ function Dashboard() {
                         value={formData.thirdProductQuantity}
                         onChange={(e) => handleInputChange('thirdProductQuantity', e.target.value)}
                         placeholder="Qty"
-                        disabled={isRunning || !isEditMode}
+                        disabled={isRunning || !isProductLinksEditMode}
                         className="w-20 px-3 py-2.5 sm:py-3 bg-black/40 border border-pink-500/50 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all text-center"
                       />
                     </div>
@@ -922,7 +1035,7 @@ function Dashboard() {
                     transition={{ duration: 0.3, delay: 0.25 }}
                     className="mt-4 pt-4 border-t border-gray-700/50"
                   >
-                    <p className="text-xs text-gray-400 flex items-start gap-2">
+                    <p className="text-xs text-gray-400 flex items-start gap-2 mb-4">
                       <Zap className="w-3 h-3 mt-0.5 text-blue-400 flex-shrink-0" />
                       <span>Automation will try URLs in order: Primary → Secondary → Third. If all 3 fail, automation stops.</span>
                     </p>
@@ -931,83 +1044,113 @@ function Dashboard() {
               </motion.div>
             </motion.div>
 
-            {/* Location Settings Section */}
+            {/* Location Settings Dropdown Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-green-900/50 to-blue-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-green-500/20 shadow-2xl mb-4 sm:mb-6"
+              className="bg-gradient-to-br from-green-900/50 to-blue-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-green-500/20 shadow-2xl mb-4 sm:mb-6 overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-500/20 rounded-lg">
+              {/* Dropdown Header */}
+              <div className="w-full px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between bg-gradient-to-r from-green-600/20 to-blue-600/20 hover:from-green-600/30 hover:to-blue-600/30 transition-all duration-300 group">
+                <motion.button
+                  onClick={() => setIsLocationSettingsOpen(!isLocationSettingsOpen)}
+                  disabled={isRunning}
+                  className="flex items-center gap-3 flex-1 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                  whileHover={!isRunning ? { scale: 1.01 } : {}}
+                  whileTap={!isRunning ? { scale: 0.99 } : {}}
+                >
+                  <div className="p-2 bg-green-500/20 rounded-lg group-hover:bg-green-500/30 transition-colors">
                     <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-bold">Location Settings</h2>
+                  <div className="text-left">
+                    <h2 className="text-lg sm:text-xl font-bold text-white">Location Settings</h2>
+                    <p className="text-xs sm:text-sm text-gray-400 mt-0.5">Configure location and coordinates</p>
+                  </div>
+                </motion.button>
+                <div className="flex items-center gap-2">
+                  {isLocationSettingsEditMode ? (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleSaveLocationSettings()
+                      }}
+                      disabled={isRunning}
+                      className="p-2 rounded-lg transition-all bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-500/20"
+                      title="Save location settings"
+                    >
+                      <Save className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setIsLocationSettingsEditMode(true)
+                      }}
+                      disabled={isRunning}
+                      className="p-2 rounded-lg transition-all bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-500/20"
+                      title="Edit location settings"
+                    >
+                      <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </motion.button>
+                  )}
+                  <motion.div
+                    animate={{ rotate: isLocationSettingsOpen ? 180 : 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="p-2 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors cursor-pointer"
+                    onClick={() => setIsLocationSettingsOpen(!isLocationSettingsOpen)}
+                  >
+                    <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
+                  </motion.div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                {/* Select Location Toggle */}
-                <div className="p-4 bg-black/30 rounded-lg border border-green-500/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="flex items-center gap-2 text-sm sm:text-base font-semibold text-gray-300">
-                      <Navigation2 className="w-5 h-5 text-green-400" />
-                      Select Location
-                    </label>
-                    <button
-                      onClick={() => handleInputChange('selectLocation', !formData.selectLocation)}
-                      disabled={isRunning}
-                      className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed ${formData.selectLocation ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gray-600'
-                        }`}
-                      type="button"
-                    >
-                      <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${formData.selectLocation ? 'translate-x-8' : 'translate-x-1'
+              {/* Dropdown Content */}
+              <motion.div
+                initial={false}
+                animate={{
+                  height: isLocationSettingsOpen ? "auto" : 0,
+                  opacity: isLocationSettingsOpen ? 1 : 0
+                }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 space-y-4">
+                  {/* Select Location Toggle */}
+                  <div className="p-4 bg-black/30 rounded-lg border border-green-500/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="flex items-center gap-2 text-sm sm:text-base font-semibold text-gray-300">
+                        <Navigation2 className="w-5 h-5 text-green-400" />
+                        Select Location
+                      </label>
+                      <button
+                        onClick={() => handleInputChange('selectLocation', !formData.selectLocation)}
+                        disabled={isRunning}
+                        className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed ${formData.selectLocation ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gray-600'
                           }`}
-                      />
-                    </button>
+                        type="button"
+                      >
+                        <span
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${formData.selectLocation ? 'translate-x-8' : 'translate-x-1'
+                            }`}
+                        />
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      {formData.selectLocation
+                        ? 'Location selection step will be executed during automation'
+                        : 'Location selection step will be skipped'}
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    {formData.selectLocation
-                      ? 'Location selection step will be executed during automation'
-                      : 'Location selection step will be skipped'}
-                  </p>
-                </div>
 
-                {/* Current Location Dropdown */}
-                <div>
-                  <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                    <Navigation2 className="w-4 h-4 flex-shrink-0" />
-                    Current Location
-                  </label>
-                  <select
-                    value={formData.currentLocation}
-                    onChange={(e) => {
-                      const value = e.target.value
-                      handleInputChange('currentLocation', value)
-                      if (value === 'default') {
-                        handleInputChange('latitude', '26.994880')
-                        handleInputChange('longitude', '75.774836')
-                      }
-                    }}
-                    disabled={isRunning}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-                  >
-                    <option value="default" className="bg-gray-800">Default Location (26.994880, 75.774836)</option>
-                    <option value="custom" className="bg-gray-800">Custom Location</option>
-                  </select>
-                </div>
-
-                {/* Latitude and Longitude Inputs */}
-                {formData.currentLocation === 'custom' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-                  >
+                  {/* Latitude and Longitude Inputs */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                        <Navigation2 className="w-4 h-4 flex-shrink-0" />
                         Latitude
                       </label>
                       <input
@@ -1016,12 +1159,13 @@ function Dashboard() {
                         value={formData.latitude}
                         onChange={(e) => handleInputChange('latitude', e.target.value)}
                         placeholder="26.994880"
-                        disabled={isRunning}
+                        disabled={isRunning || !isLocationSettingsEditMode}
                         className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                       />
                     </div>
                     <div>
                       <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                        <Navigation2 className="w-4 h-4 flex-shrink-0" />
                         Longitude
                       </label>
                       <input
@@ -1030,54 +1174,54 @@ function Dashboard() {
                         value={formData.longitude}
                         onChange={(e) => handleInputChange('longitude', e.target.value)}
                         placeholder="75.774836"
-                        disabled={isRunning}
+                        disabled={isRunning || !isLocationSettingsEditMode}
                         className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                       />
                     </div>
-                  </motion.div>
-                )}
+                  </div>
 
-                {/* Search Input and Location Text - Only visible when Select Location toggle is ON */}
-                {formData.selectLocation && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="space-y-4 mt-4 pt-4 border-t border-gray-700/50"
-                  >
-                    <div>
-                      <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                        <Navigation2 className="w-4 h-4 flex-shrink-0 text-green-400" />
-                        Search Input
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.searchInput}
-                        onChange={(e) => handleInputChange('searchInput', e.target.value)}
-                        placeholder="chinu juice center"
-                        disabled={isRunning}
-                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-green-500/30 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-                      />
-                      <p className="text-xs text-gray-400 mt-1">Search query to find location in Google search</p>
-                    </div>
-                    <div>
-                      <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                        <Navigation2 className="w-4 h-4 flex-shrink-0 text-green-400" />
-                        Location Text
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.locationText}
-                        onChange={(e) => handleInputChange('locationText', e.target.value)}
-                        placeholder="Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India"
-                        disabled={isRunning}
-                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-green-500/30 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-                      />
-                      <p className="text-xs text-gray-400 mt-1">Exact location text that appears in search results to select</p>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
+                  {/* Search Input and Location Text - Only visible when Select Location toggle is ON */}
+                  {formData.selectLocation && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 mt-4 pt-4 border-t border-gray-700/50"
+                    >
+                      <div>
+                        <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                          <Navigation2 className="w-4 h-4 flex-shrink-0 text-green-400" />
+                          Search Input
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.searchInput}
+                          onChange={(e) => handleInputChange('searchInput', e.target.value)}
+                          placeholder="chinu juice center"
+                          disabled={isRunning || !isLocationSettingsEditMode}
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-green-500/30 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Search query to find location in Google search</p>
+                      </div>
+                      <div>
+                        <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
+                          <Navigation2 className="w-4 h-4 flex-shrink-0 text-green-400" />
+                          Location Text
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.locationText}
+                          onChange={(e) => handleInputChange('locationText', e.target.value)}
+                          placeholder="Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India"
+                          disabled={isRunning || !isLocationSettingsEditMode}
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-green-500/30 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Exact location text that appears in search results to select</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
             </motion.div>
 
             {/* Start/Stop Button */}
