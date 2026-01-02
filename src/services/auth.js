@@ -82,9 +82,11 @@ export const updateSettings = async (settings) => {
     const response = await api.put('/auth/settings', settings)
     return response.data
   } catch (error) {
+    console.error('[DEBUG] updateSettings error:', error)
+    console.error('[DEBUG] Error response:', error.response?.data)
     return {
       success: false,
-      error: error.response?.data?.error || error.message
+      error: error.response?.data?.error || error.message || 'Unknown error'
     }
   }
 }

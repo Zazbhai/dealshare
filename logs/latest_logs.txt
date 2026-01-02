@@ -1,87 +1,382 @@
-[2025-12-30 22:56:15] [INFO] Starting automation: 1 orders, max 1 parallel windows, retry: enabled (failed orders will retry once)
-[2025-12-30 22:56:31] [ORDER 1 STDOUT] 📍 Location selection enabled
-[2025-12-30 22:56:31] [ORDER 1 STDOUT]    Search query: chinu juice center
-[2025-12-30 22:56:31] [ORDER 1 STDOUT]    Location text: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
-[2025-12-30 22:56:31] [ORDER 1 STDOUT] ➡ Trying normal location flow...
-[2025-12-30 22:56:38] [ORDER 1 STDOUT] ❌ Location selection error: Page.wait_for_selector: Timeout 7000ms exceeded.
-[2025-12-30 22:56:38] [ORDER 1 STDOUT] Call log:
-[2025-12-30 22:56:38] [ORDER 1 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
-[2025-12-30 22:56:38] [ORDER 1 STDOUT]     - waiting for" https://www.dealshare.in/" navigation to finish...
-[2025-12-30 22:56:38] [ORDER 1 STDOUT]     - navigated to "https://www.dealshare.in/"
-[2025-12-30 22:56:38] [ORDER 1 STDOUT] 
-[2025-12-30 22:56:38] [ORDER 1 STDOUT] ⚠ Location selection failed, retrying... Error: Page.wait_for_selector: Timeout 7000ms exceeded.
-[2025-12-30 22:56:38] [ORDER 1 STDOUT] Call log:
-[2025-12-30 22:56:38] [ORDER 1 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
-[2025-12-30 22:56:38] [ORDER 1 STDOUT]     - waiting for" https://www.dealshare.in/" navigation to finish...
-[2025-12-30 22:56:38] [ORDER 1 STDOUT]     - navigated to "https://www.dealshare.in/"
-[2025-12-30 22:56:38] [ORDER 1 STDOUT] 
-[2025-12-30 22:56:39] [ORDER 1 STDOUT] 🔍 Searching for location: chinu juice center
-[2025-12-30 22:56:39] [ORDER 1 STDOUT] 📍 Selecting location: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
-[2025-12-30 22:56:42] [ORDER 1 STDOUT] ✅ Confirm Address pressed!
-[2025-12-30 22:56:44] [ORDER 1 STDOUT] 📍 Attempt 1/3
-[2025-12-30 22:56:44] [ORDER 1 STDOUT] 👤 Attempting to click user icon...
-[2025-12-30 22:56:46] [ORDER 1 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
-[2025-12-30 22:56:46] [ORDER 1 STDOUT] ✅ User icon clicked (regular)
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG] Step 1: Reading environment variables...
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG]   API_KEY: SET
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG]   API_KEY (masked): AtnE********************************os3g (length: 40)
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG]   API_URL: https://meowsms.shop/stubs/handler_api.php
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG]   COUNTRY: 22
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG]   OPERATOR: 10
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG]   SERVICE: dealshare
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG] ========================================
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG] Step 2: API configuration validated successfully
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] 📱 Requesting phone number from API...
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG] Step 4: Calling get_number() with:
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG]   service=dealshare
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG]   country=22
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG]   operator=10
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG]   api_key=AtnE...os3g
-[2025-12-30 22:56:47] [ORDER 1 STDOUT] [DEBUG]   base_url=https://meowsms.shop/stubs/handler_api.php
-[2025-12-30 22:56:49] [ORDER 1 STDOUT] [DEBUG] Step 5: get_number() returned: None
-[2025-12-30 22:56:49] [ORDER 1 STDOUT] ❌ Failed to get phone number from API
-[2025-12-30 22:56:50] [INFO] Order 1 failed (return_code=1) - Retrying once (User Setting)...
-[2025-12-30 22:56:51] [INFO] Waiting 10 seconds before starting order 1/1...
-[2025-12-30 22:57:06] [ORDER 1 STDOUT] 📍 Location selection enabled
-[2025-12-30 22:57:06] [ORDER 1 STDOUT]    Search query: chinu juice center
-[2025-12-30 22:57:06] [ORDER 1 STDOUT]    Location text: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
-[2025-12-30 22:57:06] [ORDER 1 STDOUT] ➡ Trying normal location flow...
-[2025-12-30 22:57:13] [ORDER 1 STDOUT] ❌ Location selection error: Page.wait_for_selector: Timeout 7000ms exceeded.
-[2025-12-30 22:57:13] [ORDER 1 STDOUT] Call log:
-[2025-12-30 22:57:13] [ORDER 1 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
-[2025-12-30 22:57:13] [ORDER 1 STDOUT] 
-[2025-12-30 22:57:13] [ORDER 1 STDOUT] ⚠ Location selection failed, retrying... Error: Page.wait_for_selector: Timeout 7000ms exceeded.
-[2025-12-30 22:57:13] [ORDER 1 STDOUT] Call log:
-[2025-12-30 22:57:13] [ORDER 1 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
-[2025-12-30 22:57:13] [ORDER 1 STDOUT] 
-[2025-12-30 22:57:15] [ORDER 1 STDOUT] 🔍 Searching for location: chinu juice center
-[2025-12-30 22:57:15] [ORDER 1 STDOUT] 📍 Selecting location: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
-[2025-12-30 22:57:17] [ORDER 1 STDOUT] ✅ Confirm Address pressed!
-[2025-12-30 22:57:19] [ORDER 1 STDOUT] 📍 Attempt 1/3
-[2025-12-30 22:57:19] [ORDER 1 STDOUT] 👤 Attempting to click user icon...
-[2025-12-30 22:57:21] [ORDER 1 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
-[2025-12-30 22:57:22] [ORDER 1 STDOUT] ✅ User icon clicked (regular)
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG] Step 1: Reading environment variables...
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG]   API_KEY: SET
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG]   API_KEY (masked): AtnE********************************os3g (length: 40)
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG]   API_URL: https://meowsms.shop/stubs/handler_api.php
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG]   COUNTRY: 22
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG]   OPERATOR: 10
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG]   SERVICE: dealshare
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG] ========================================
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG] Step 2: API configuration validated successfully
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] 📱 Requesting phone number from API...
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG] Step 4: Calling get_number() with:
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG]   service=dealshare
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG]   country=22
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG]   operator=10
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG]   api_key=AtnE...os3g
-[2025-12-30 22:57:23] [ORDER 1 STDOUT] [DEBUG]   base_url=https://meowsms.shop/stubs/handler_api.php
-[2025-12-30 22:57:25] [ORDER 1 STDOUT] [DEBUG] Step 5: get_number() returned: None
-[2025-12-30 22:57:25] [ORDER 1 STDOUT] ❌ Failed to get phone number from API
-[2025-12-30 22:57:26] [INFO] Re-queueing order 1 for retry.
-[2025-12-30 22:57:27] [INFO] Waiting 10 seconds before starting order 1/1...
+[2026-01-02 19:52:15] [INFO] Starting automation: 8 orders, max 8 parallel windows, retry: disabled
+[2026-01-02 19:52:15] [INFO] Waiting 2 seconds before starting order 2/8...
+[2026-01-02 19:52:17] [INFO] Waiting 2 seconds before starting order 3/8...
+[2026-01-02 19:52:19] [INFO] Waiting 2 seconds before starting order 4/8...
+[2026-01-02 19:52:21] [ORDER 1 STDOUT] 📍 Location selection enabled
+[2026-01-02 19:52:21] [ORDER 1 STDOUT]    Search query: chinu juice center
+[2026-01-02 19:52:21] [ORDER 1 STDOUT]    Location text: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:21] [ORDER 1 STDOUT] ➡ Trying normal location flow...
+[2026-01-02 19:52:21] [INFO] Waiting 2 seconds before starting order 5/8...
+[2026-01-02 19:52:23] [ORDER 2 STDOUT] 📍 Location selection enabled
+[2026-01-02 19:52:23] [ORDER 2 STDOUT]    Search query: chinu juice center
+[2026-01-02 19:52:23] [ORDER 2 STDOUT]    Location text: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:23] [ORDER 2 STDOUT] ➡ Trying normal location flow...
+[2026-01-02 19:52:23] [INFO] Waiting 2 seconds before starting order 6/8...
+[2026-01-02 19:52:25] [ORDER 3 STDOUT] 📍 Location selection enabled
+[2026-01-02 19:52:25] [ORDER 3 STDOUT]    Search query: chinu juice center
+[2026-01-02 19:52:25] [ORDER 3 STDOUT]    Location text: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:25] [ORDER 3 STDOUT] ➡ Trying normal location flow...
+[2026-01-02 19:52:25] [INFO] Waiting 2 seconds before starting order 7/8...
+[2026-01-02 19:52:28] [INFO] Waiting 2 seconds before starting order 8/8...
+[2026-01-02 19:52:28] [ORDER 1 STDOUT] ❌ Location selection error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:28] [ORDER 1 STDOUT] Call log:
+[2026-01-02 19:52:28] [ORDER 1 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:28] [ORDER 1 STDOUT] 
+[2026-01-02 19:52:28] [ORDER 1 STDOUT] ⚠ Location selection failed, retrying... Error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:28] [ORDER 1 STDOUT] Call log:
+[2026-01-02 19:52:28] [ORDER 1 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:28] [ORDER 1 STDOUT] 
+[2026-01-02 19:52:28] [ORDER 4 STDOUT] 📍 Location selection enabled
+[2026-01-02 19:52:28] [ORDER 4 STDOUT]    Search query: chinu juice center
+[2026-01-02 19:52:28] [ORDER 4 STDOUT]    Location text: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:28] [ORDER 4 STDOUT] ➡ Trying normal location flow...
+[2026-01-02 19:52:29] [ORDER 1 STDOUT] 🔍 Searching for location: chinu juice center
+[2026-01-02 19:52:29] [ORDER 1 STDOUT] 📍 Selecting location: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:30] [ORDER 2 STDOUT] ❌ Location selection error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:30] [ORDER 2 STDOUT] Call log:
+[2026-01-02 19:52:30] [ORDER 2 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:30] [ORDER 2 STDOUT] 
+[2026-01-02 19:52:30] [ORDER 2 STDOUT] ⚠ Location selection failed, retrying... Error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:30] [ORDER 2 STDOUT] Call log:
+[2026-01-02 19:52:30] [ORDER 2 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:30] [ORDER 2 STDOUT] 
+[2026-01-02 19:52:31] [ORDER 5 STDOUT] 📍 Location selection enabled
+[2026-01-02 19:52:31] [ORDER 5 STDOUT]    Search query: chinu juice center
+[2026-01-02 19:52:31] [ORDER 5 STDOUT]    Location text: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:31] [ORDER 5 STDOUT] ➡ Trying normal location flow...
+[2026-01-02 19:52:31] [ORDER 2 STDOUT] 🔍 Searching for location: chinu juice center
+[2026-01-02 19:52:31] [ORDER 2 STDOUT] 📍 Selecting location: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:32] [ORDER 3 STDOUT] ❌ Location selection error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:32] [ORDER 3 STDOUT] Call log:
+[2026-01-02 19:52:32] [ORDER 3 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:33] [ORDER 3 STDOUT] 
+[2026-01-02 19:52:33] [ORDER 3 STDOUT] ⚠ Location selection failed, retrying... Error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:33] [ORDER 3 STDOUT] Call log:
+[2026-01-02 19:52:33] [ORDER 3 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:33] [ORDER 3 STDOUT] 
+[2026-01-02 19:52:33] [ORDER 6 STDOUT] 📍 Location selection enabled
+[2026-01-02 19:52:33] [ORDER 6 STDOUT]    Search query: chinu juice center
+[2026-01-02 19:52:33] [ORDER 6 STDOUT]    Location text: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:33] [ORDER 6 STDOUT] ➡ Trying normal location flow...
+[2026-01-02 19:52:34] [ORDER 1 STDOUT] ✅ Confirm Address pressed!
+[2026-01-02 19:52:35] [ORDER 4 STDOUT] ❌ Location selection error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:35] [ORDER 4 STDOUT] Call log:
+[2026-01-02 19:52:35] [ORDER 4 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:35] [ORDER 4 STDOUT] 
+[2026-01-02 19:52:35] [ORDER 4 STDOUT] ⚠ Location selection failed, retrying... Error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:35] [ORDER 4 STDOUT] Call log:
+[2026-01-02 19:52:35] [ORDER 4 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:35] [ORDER 4 STDOUT] 
+[2026-01-02 19:52:35] [ORDER 3 STDOUT] 🔍 Searching for location: chinu juice center
+[2026-01-02 19:52:35] [ORDER 3 STDOUT] 📍 Selecting location: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:36] [ORDER 2 STDOUT] ✅ Confirm Address pressed!
+[2026-01-02 19:52:36] [ORDER 1 STDOUT] 📍 Attempt 1/3
+[2026-01-02 19:52:36] [ORDER 1 STDOUT] 👤 Attempting to click user icon...
+[2026-01-02 19:52:36] [ORDER 7 STDOUT] 📍 Location selection enabled
+[2026-01-02 19:52:36] [ORDER 7 STDOUT]    Search query: chinu juice center
+[2026-01-02 19:52:36] [ORDER 7 STDOUT]    Location text: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:36] [ORDER 7 STDOUT] ➡ Trying normal location flow...
+[2026-01-02 19:52:38] [ORDER 4 STDOUT] 🔍 Searching for location: chinu juice center
+[2026-01-02 19:52:38] [ORDER 4 STDOUT] 📍 Selecting location: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:38] [ORDER 2 STDOUT] 📍 Attempt 1/3
+[2026-01-02 19:52:38] [ORDER 2 STDOUT] 👤 Attempting to click user icon...
+[2026-01-02 19:52:38] [ORDER 1 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-02 19:52:38] [ORDER 5 STDOUT] ❌ Location selection error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:38] [ORDER 5 STDOUT] Call log:
+[2026-01-02 19:52:38] [ORDER 5 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:38] [ORDER 5 STDOUT] 
+[2026-01-02 19:52:38] [ORDER 5 STDOUT] ⚠ Location selection failed, retrying... Error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:38] [ORDER 5 STDOUT] Call log:
+[2026-01-02 19:52:38] [ORDER 5 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:38] [ORDER 5 STDOUT] 
+[2026-01-02 19:52:39] [ORDER 3 STDOUT] ✅ Confirm Address pressed!
+[2026-01-02 19:52:39] [ORDER 1 STDOUT] ✅ User icon clicked (regular)
+[2026-01-02 19:52:40] [ORDER 2 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-02 19:52:40] [ORDER 6 STDOUT] ❌ Location selection error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:40] [ORDER 6 STDOUT] Call log:
+[2026-01-02 19:52:40] [ORDER 6 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:40] [ORDER 6 STDOUT]     - waiting for" https://www.dealshare.in/" navigation to finish...
+[2026-01-02 19:52:40] [ORDER 6 STDOUT]     - navigated to "https://www.dealshare.in/"
+[2026-01-02 19:52:40] [ORDER 6 STDOUT] 
+[2026-01-02 19:52:40] [ORDER 6 STDOUT] ⚠ Location selection failed, retrying... Error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:40] [ORDER 6 STDOUT] Call log:
+[2026-01-02 19:52:40] [ORDER 6 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:40] [ORDER 6 STDOUT]     - waiting for" https://www.dealshare.in/" navigation to finish...
+[2026-01-02 19:52:40] [ORDER 6 STDOUT]     - navigated to "https://www.dealshare.in/"
+[2026-01-02 19:52:40] [ORDER 6 STDOUT] 
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG]   API_KEY (masked): smIP********************************AXZ7 (length: 40)
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG]   API_URL: https://meowsms.shop/stubs/handler_api.php
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG]   OPERATOR: 12
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG]   SERVICE: dealshare
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG] ========================================
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] 📱 Requesting phone number from API...
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG]   service=dealshare
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG]   country=22
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG]   operator=12
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG]   api_key=smIP...AXZ7
+[2026-01-02 19:52:40] [ORDER 1 STDOUT] [DEBUG]   base_url=https://meowsms.shop/stubs/handler_api.php
+[2026-01-02 19:52:41] [ORDER 2 STDOUT] ✅ User icon clicked (regular)
+[2026-01-02 19:52:41] [ORDER 5 STDOUT] 🔍 Searching for location: chinu juice center
+[2026-01-02 19:52:41] [ORDER 5 STDOUT] 📍 Selecting location: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:41] [ORDER 4 STDOUT] ✅ Confirm Address pressed!
+[2026-01-02 19:52:41] [ORDER 8 STDOUT] 📍 Location selection enabled
+[2026-01-02 19:52:41] [ORDER 8 STDOUT]    Search query: chinu juice center
+[2026-01-02 19:52:41] [ORDER 8 STDOUT]    Location text: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:41] [ORDER 8 STDOUT] ➡ Trying normal location flow...
+[2026-01-02 19:52:41] [ORDER 3 STDOUT] 📍 Attempt 1/3
+[2026-01-02 19:52:41] [ORDER 3 STDOUT] 👤 Attempting to click user icon...
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG]   API_KEY (masked): smIP********************************AXZ7 (length: 40)
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG]   API_URL: https://meowsms.shop/stubs/handler_api.php
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG]   OPERATOR: 12
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG]   SERVICE: dealshare
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG] ========================================
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] 📱 Requesting phone number from API...
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG]   service=dealshare
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG]   country=22
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG]   operator=12
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG]   api_key=smIP...AXZ7
+[2026-01-02 19:52:42] [ORDER 2 STDOUT] [DEBUG]   base_url=https://meowsms.shop/stubs/handler_api.php
+[2026-01-02 19:52:42] [ORDER 1 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-02 19:52:42] [ORDER 1 STDOUT] ❌ Failed to get phone number from API
+[2026-01-02 19:52:43] [ORDER 4 STDOUT] 📍 Attempt 1/3
+[2026-01-02 19:52:43] [ORDER 4 STDOUT] 👤 Attempting to click user icon...
+[2026-01-02 19:52:43] [ORDER 7 STDOUT] ❌ Location selection error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:43] [ORDER 7 STDOUT] Call log:
+[2026-01-02 19:52:43] [ORDER 7 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:43] [ORDER 7 STDOUT]     - waiting for" https://www.dealshare.in/" navigation to finish...
+[2026-01-02 19:52:43] [ORDER 7 STDOUT]     - navigated to "https://www.dealshare.in/"
+[2026-01-02 19:52:43] [ORDER 7 STDOUT] 
+[2026-01-02 19:52:43] [ORDER 7 STDOUT] ⚠ Location selection failed, retrying... Error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:43] [ORDER 7 STDOUT] Call log:
+[2026-01-02 19:52:43] [ORDER 7 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:43] [ORDER 7 STDOUT]     - waiting for" https://www.dealshare.in/" navigation to finish...
+[2026-01-02 19:52:44] [ORDER 2 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-02 19:52:44] [ORDER 7 STDOUT]     - navigated to "https://www.dealshare.in/"
+[2026-01-02 19:52:44] [ORDER 2 STDOUT] ❌ Failed to get phone number from API
+[2026-01-02 19:52:44] [ORDER 7 STDOUT] 
+[2026-01-02 19:52:44] [ORDER 3 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-02 19:52:44] [INFO] Order 1 completed (FAILED, return_code=1) - 1/8 total
+[2026-01-02 19:52:44] [ORDER 5 STDOUT] ✅ Confirm Address pressed!
+[2026-01-02 19:52:45] [ORDER 3 STDOUT] ✅ User icon clicked (regular)
+[2026-01-02 19:52:45] [ORDER 4 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-02 19:52:45] [INFO] Order 2 completed (FAILED, return_code=1) - 2/8 total
+[2026-01-02 19:52:45] [ORDER 7 STDOUT] 🔍 Searching for location: chinu juice center
+[2026-01-02 19:52:45] [ORDER 7 STDOUT] 📍 Selecting location: Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India
+[2026-01-02 19:52:46] [ORDER 4 STDOUT] ✅ User icon clicked (regular)
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG]   API_KEY (masked): smIP********************************AXZ7 (length: 40)
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG]   API_URL: https://meowsms.shop/stubs/handler_api.php
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG]   OPERATOR: 12
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG]   SERVICE: dealshare
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG] ========================================
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] 📱 Requesting phone number from API...
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG]   service=dealshare
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG]   country=22
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG]   operator=12
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG]   api_key=smIP...AXZ7
+[2026-01-02 19:52:46] [ORDER 3 STDOUT] [DEBUG]   base_url=https://meowsms.shop/stubs/handler_api.php
+[2026-01-02 19:52:46] [ORDER 5 STDOUT] 📍 Attempt 1/3
+[2026-01-02 19:52:47] [ORDER 5 STDOUT] 👤 Attempting to click user icon...
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG]   API_KEY (masked): smIP********************************AXZ7 (length: 40)
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG]   API_URL: https://meowsms.shop/stubs/handler_api.php
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG]   OPERATOR: 12
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG]   SERVICE: dealshare
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG] ========================================
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] 📱 Requesting phone number from API...
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG]   service=dealshare
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG]   country=22
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG]   operator=12
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG]   api_key=smIP...AXZ7
+[2026-01-02 19:52:47] [ORDER 4 STDOUT] [DEBUG]   base_url=https://meowsms.shop/stubs/handler_api.php
+[2026-01-02 19:52:48] [ORDER 7 STDOUT] ✅ Confirm Address pressed!
+[2026-01-02 19:52:48] [ORDER 6 STDOUT] ❌ Location selection error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:48] [ORDER 6 STDOUT] Call log:
+[2026-01-02 19:52:48] [ORDER 6 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:48] [ORDER 6 STDOUT] 
+[2026-01-02 19:52:48] [ORDER 6 STDOUT] ❌ Location selection retry also failed: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:48] [ORDER 6 STDOUT] Call log:
+[2026-01-02 19:52:48] [ORDER 6 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:48] [ORDER 6 STDOUT] 
+[2026-01-02 19:52:48] [ORDER 8 STDOUT] ❌ Location selection error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:48] [ORDER 8 STDOUT] Call log:
+[2026-01-02 19:52:48] [ORDER 8 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:48] [ORDER 8 STDOUT] 
+[2026-01-02 19:52:48] [ORDER 8 STDOUT] ⚠ Location selection failed, retrying... Error: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:48] [ORDER 8 STDOUT] Call log:
+[2026-01-02 19:52:48] [ORDER 8 STDOUT]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:48] [ORDER 8 STDOUT] 
+[2026-01-02 19:52:48] [ORDER 6 STDERR] Traceback (most recent call last):
+[2026-01-02 19:52:48] [ORDER 6 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 1373, in <module>
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     main()
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     ~~~~^^
+[2026-01-02 19:52:48] [ORDER 6 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 875, in main
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     select_location(page, search_input, location_text)
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-02 19:52:48] [ORDER 6 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 78, in select_location
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     page.wait_for_selector("button:has-text('Type Manually')", timeout=7000)
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-02 19:52:48] [ORDER 6 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\sync_api\_generated.py", line 8182, in wait_for_selector
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     self._sync(
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     ~~~~~~~~~~^
+[2026-01-02 19:52:48] [ORDER 6 STDERR]         self._impl_obj.wait_for_selector(
+[2026-01-02 19:52:48] [ORDER 6 STDERR]         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-02 19:52:48] [ORDER 6 STDERR]             selector=selector, timeout=timeout, state=state, strict=strict
+[2026-01-02 19:52:48] [ORDER 6 STDERR]             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-02 19:52:48] [ORDER 6 STDERR]         )
+[2026-01-02 19:52:48] [ORDER 6 STDERR]         ^
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     )
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     ^
+[2026-01-02 19:52:48] [ORDER 6 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_sync_base.py", line 115, in _sync
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     return task.result()
+[2026-01-02 19:52:48] [ORDER 6 STDERR]            ~~~~~~~~~~~^^
+[2026-01-02 19:52:48] [ORDER 6 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_page.py", line 423, in wait_for_selector
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     return await self._main_frame.wait_for_selector(**locals_to_params(locals()))
+[2026-01-02 19:52:48] [ORDER 6 STDERR]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-02 19:52:48] [ORDER 6 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_frame.py", line 369, in wait_for_selector
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     await self._channel.send(
+[2026-01-02 19:52:48] [ORDER 6 STDERR]         "waitForSelector", self._timeout, locals_to_params(locals())
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     )
+[2026-01-02 19:52:48] [ORDER 6 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_connection.py", line 69, in send
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     return await self._connection.wrap_api_call(
+[2026-01-02 19:52:48] [ORDER 6 STDERR]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     ...<3 lines>...
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     )
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     ^
+[2026-01-02 19:52:48] [ORDER 6 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_connection.py", line 558, in wrap_api_call
+[2026-01-02 19:52:48] [ORDER 6 STDERR]     raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+[2026-01-02 19:52:48] [ORDER 6 STDERR] playwright._impl._errors.TimeoutError: Page.wait_for_selector: Timeout 7000ms exceeded.
+[2026-01-02 19:52:48] [ORDER 6 STDERR] Call log:
+[2026-01-02 19:52:48] [ORDER 6 STDERR]   - waiting for locator("button:has-text('Type Manually')") to be visible
+[2026-01-02 19:52:48] [ORDER 6 STDERR] 
+[2026-01-02 19:52:49] [ORDER 5 STDOUT] ❌ Could not find user icon
+[2026-01-02 19:52:49] [ORDER 5 STDOUT] ⚠️ Attempt failed, retrying... (User icon not found)
+[2026-01-02 19:52:49] [INFO] Order 6 completed (FAILED, return_code=1) - 3/8 total
+[2026-01-02 19:52:50] [ORDER 7 STDOUT] 📍 Attempt 1/3
+[2026-01-02 19:52:50] [ORDER 7 STDOUT] 👤 Attempting to click user icon...
+[2026-01-02 19:52:50] [ORDER 4 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-02 19:52:50] [ORDER 4 STDOUT] ❌ Failed to get phone number from API
+[2026-01-02 19:52:51] [ORDER 5 STDOUT] 📍 Attempt 2/3
+[2026-01-02 19:52:51] [ORDER 5 STDOUT] 👤 Attempting to click user icon...
+[2026-01-02 19:52:51] [INFO] Order 4 completed (FAILED, return_code=1) - 4/8 total
+[2026-01-02 19:52:52] [ORDER 7 STDOUT] ❌ Could not find user icon
+[2026-01-02 19:52:52] [ORDER 7 STDOUT] ⚠️ Attempt failed, retrying... (User icon not found)
+[2026-01-02 19:52:53] [ORDER 5 STDOUT] ❌ Could not find user icon
+[2026-01-02 19:52:53] [ORDER 5 STDOUT] ⚠️ Attempt failed, retrying... (User icon not found)
+[2026-01-02 19:52:54] [ORDER 7 STDOUT] 📍 Attempt 2/3
+[2026-01-02 19:52:54] [ORDER 7 STDOUT] 👤 Attempting to click user icon...
+[2026-01-02 19:52:55] [ORDER 5 STDOUT] 📍 Attempt 3/3
+[2026-01-02 19:52:55] [ORDER 5 STDOUT] 👤 Attempting to click user icon...
+[2026-01-02 19:52:56] [ORDER 8 STDOUT] ❌ Location selection retry also failed: Page.wait_for_selector: Timeout 8000ms exceeded.
+[2026-01-02 19:52:56] [ORDER 8 STDOUT] Call log:
+[2026-01-02 19:52:56] [ORDER 8 STDOUT]   - waiting for locator("p.Address_addressBold__GlDKW") to be visible
+[2026-01-02 19:52:56] [ORDER 8 STDOUT] 
+[2026-01-02 19:52:56] [ORDER 7 STDOUT] ❌ Could not find user icon
+[2026-01-02 19:52:56] [ORDER 7 STDOUT] ⚠️ Attempt failed, retrying... (User icon not found)
+[2026-01-02 19:52:57] [ORDER 8 STDERR] Traceback (most recent call last):
+[2026-01-02 19:52:57] [ORDER 8 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 1373, in <module>
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     main()
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     ~~~~^^
+[2026-01-02 19:52:57] [ORDER 8 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 872, in main
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     page.wait_for_selector("p.Address_addressBold__GlDKW", timeout=8000)
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-02 19:52:57] [ORDER 8 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\sync_api\_generated.py", line 8182, in wait_for_selector
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     self._sync(
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     ~~~~~~~~~~^
+[2026-01-02 19:52:57] [ORDER 8 STDERR]         self._impl_obj.wait_for_selector(
+[2026-01-02 19:52:57] [ORDER 8 STDERR]         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-02 19:52:57] [ORDER 8 STDERR]             selector=selector, timeout=timeout, state=state, strict=strict
+[2026-01-02 19:52:57] [ORDER 8 STDERR]             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-02 19:52:57] [ORDER 8 STDERR]         )
+[2026-01-02 19:52:57] [ORDER 8 STDERR]         ^
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     )
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     ^
+[2026-01-02 19:52:57] [ORDER 8 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_sync_base.py", line 115, in _sync
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     return task.result()
+[2026-01-02 19:52:57] [ORDER 8 STDERR]            ~~~~~~~~~~~^^
+[2026-01-02 19:52:57] [ORDER 8 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_page.py", line 423, in wait_for_selector
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     return await self._main_frame.wait_for_selector(**locals_to_params(locals()))
+[2026-01-02 19:52:57] [ORDER 8 STDERR]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-02 19:52:57] [ORDER 8 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_frame.py", line 369, in wait_for_selector
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     await self._channel.send(
+[2026-01-02 19:52:57] [ORDER 8 STDERR]         "waitForSelector", self._timeout, locals_to_params(locals())
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     )
+[2026-01-02 19:52:57] [ORDER 8 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_connection.py", line 69, in send
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     return await self._connection.wrap_api_call(
+[2026-01-02 19:52:57] [ORDER 8 STDERR]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     ...<3 lines>...
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     )
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     ^
+[2026-01-02 19:52:57] [ORDER 8 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_connection.py", line 558, in wrap_api_call
+[2026-01-02 19:52:57] [ORDER 8 STDERR]     raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+[2026-01-02 19:52:57] [ORDER 8 STDERR] playwright._impl._errors.TimeoutError: Page.wait_for_selector: Timeout 8000ms exceeded.
+[2026-01-02 19:52:57] [ORDER 8 STDERR] Call log:
+[2026-01-02 19:52:57] [ORDER 8 STDERR]   - waiting for locator("p.Address_addressBold__GlDKW") to be visible
+[2026-01-02 19:52:57] [ORDER 8 STDERR] 
+[2026-01-02 19:52:57] [INFO] Order 8 completed (FAILED, return_code=1) - 5/8 total
+[2026-01-02 19:52:57] [ORDER 5 STDOUT] ❌ Could not find user icon
+[2026-01-02 19:52:57] [ORDER 5 STDOUT] ❌ All attempts failed: User icon not found
+[2026-01-02 19:52:57] [ORDER 5 STDERR] Traceback (most recent call last):
+[2026-01-02 19:52:57] [ORDER 5 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 1373, in <module>
+[2026-01-02 19:52:57] [ORDER 5 STDERR]     main()
+[2026-01-02 19:52:57] [ORDER 5 STDERR]     ~~~~^^
+[2026-01-02 19:52:57] [ORDER 5 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 886, in main
+[2026-01-02 19:52:57] [ORDER 5 STDERR]     click_user_icon_with_retry(page)
+[2026-01-02 19:52:57] [ORDER 5 STDERR]     ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+[2026-01-02 19:52:57] [ORDER 5 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 201, in click_user_icon_with_retry
+[2026-01-02 19:52:57] [ORDER 5 STDERR]     click_user_icon(page)
+[2026-01-02 19:52:57] [ORDER 5 STDERR]     ~~~~~~~~~~~~~~~^^^^^^
+[2026-01-02 19:52:57] [ORDER 5 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 136, in click_user_icon
+[2026-01-02 19:52:57] [ORDER 5 STDERR]     raise Exception("User icon not found")
+[2026-01-02 19:52:57] [ORDER 5 STDERR] Exception: User icon not found
+[2026-01-02 19:52:58] [ORDER 3 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-02 19:52:58] [ORDER 3 STDOUT] ❌ Failed to get phone number from API
+[2026-01-02 19:52:58] [INFO] Order 5 completed (FAILED, return_code=1) - 6/8 total
+[2026-01-02 19:52:58] [INFO] Order 3 completed (FAILED, return_code=1) - 7/8 total
+[2026-01-02 19:52:58] [ORDER 7 STDOUT] 📍 Attempt 3/3
+[2026-01-02 19:52:58] [ORDER 7 STDOUT] 👤 Attempting to click user icon...
+[2026-01-02 19:53:00] [ORDER 7 STDOUT] ❌ Could not find user icon
+[2026-01-02 19:53:01] [ORDER 7 STDOUT] ❌ All attempts failed: User icon not found
+[2026-01-02 19:53:01] [ORDER 7 STDERR] Traceback (most recent call last):
+[2026-01-02 19:53:01] [ORDER 7 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 1373, in <module>
+[2026-01-02 19:53:01] [ORDER 7 STDERR]     main()
+[2026-01-02 19:53:01] [ORDER 7 STDERR]     ~~~~^^
+[2026-01-02 19:53:01] [ORDER 7 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 886, in main
+[2026-01-02 19:53:01] [ORDER 7 STDERR]     click_user_icon_with_retry(page)
+[2026-01-02 19:53:01] [ORDER 7 STDERR]     ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+[2026-01-02 19:53:01] [ORDER 7 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 201, in click_user_icon_with_retry
+[2026-01-02 19:53:01] [ORDER 7 STDERR]     click_user_icon(page)
+[2026-01-02 19:53:01] [ORDER 7 STDERR]     ~~~~~~~~~~~~~~~^^^^^^
+[2026-01-02 19:53:01] [ORDER 7 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 136, in click_user_icon
+[2026-01-02 19:53:01] [ORDER 7 STDERR]     raise Exception("User icon not found")
+[2026-01-02 19:53:01] [ORDER 7 STDERR] Exception: User icon not found
+[2026-01-02 19:53:01] [INFO] Order 7 completed (FAILED, return_code=1) - 8/8 total
+[2026-01-02 19:53:02] [INFO] All 8 orders completed!
+[2026-01-02 19:53:02] [INFO] Final stats: Success=0, Failure=8
+[2026-01-02 19:53:02] [DEBUG] ========== AUTOMATION WORKER FINISHED ==========

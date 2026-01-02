@@ -32,12 +32,7 @@ from models.global_settings import GlobalSettings
 from auth.jwt_auth import create_access_token, verify_token
 from backend.middleware import require_auth, require_admin
 
-# Determine if we're in production (Docker) or development
-_is_production = os.path.exists('/app/dist')  # Check if dist folder exists (Docker build)
-_static_folder = '/app/dist' if _is_production else None
-_static_url_path = '' if _is_production else None
-
-app = Flask(__name__, static_folder=_static_folder, static_url_path=_static_url_path)
+app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
 
@@ -124,11 +119,28 @@ def login():
 @app.route('/api/auth/me', methods=['GET'])
 @require_auth
 def get_current_user():
-    """Get current authenticated user"""
-    return jsonify({
-        "success": True,
-        "user": request.current_user
-    })
+    """Get current authenticated user with settings from JSON file"""
+    try:
+        user = request.current_user.copy()
+        user_id = user.get('_id')
+        
+        # Load settings from JSON file
+        from user_settings_storage import load_user_settings
+        settings = load_user_settings(user_id)
+        
+        # Merge settings into user object
+        user.update(settings)
+        
+        return jsonify({
+            "success": True,
+            "user": user
+        })
+    except Exception as e:
+        # Fallback to just returning user if settings loading fails
+        return jsonify({
+            "success": True,
+            "user": request.current_user
+        })
 
 @app.route('/api/auth/settings', methods=['PUT'])
 @require_auth
@@ -138,6 +150,9 @@ def update_settings():
         data = request.json or {}
         user_id = request.current_user['_id']
         
+        # Debug: Print received data
+        print(f"[DEBUG] update_settings - Received data keys: {list(data.keys())}")
+        print(f"[DEBUG] update_settings - Received data: {data}")
         
         # Users can update API settings, dashboard settings, product URLs, location settings, etc.
         allowed_fields = [
@@ -148,6 +163,9 @@ def update_settings():
             'total_orders',
             'max_parallel_windows',
             'retry_orders',
+            'products',
+            'order_all',
+            # Keep old fields for backward compatibility (will be converted to products)
             'primary_product_url',
             'secondary_product_url',
             'third_product_url',
@@ -160,32 +178,100 @@ def update_settings():
             'search_input',
             'location_text'
         ]
+        # Filter settings to only include allowed fields
+        # Note: We include all values (including empty arrays, False, etc.) as they are valid
         settings = {k: v for k, v in data.items() if k in allowed_fields}
+        
+        # Debug: Print filtered settings
+        print(f"[DEBUG] update_settings - Filtered settings keys: {list(settings.keys())}")
+        print(f"[DEBUG] update_settings - Filtered settings: {settings}")
         
         # CRITICAL: Strip whitespace from API key when saving
         if 'api_key' in settings and settings['api_key']:
             api_key_raw = settings['api_key']
             settings['api_key'] = api_key_raw.strip()
         
+        # Validate that we have at least one setting to update
+        # Empty arrays and False values are valid, so we check if dict is not empty
         if not settings:
+            print(f"[DEBUG] update_settings - ERROR: No valid settings after filtering.")
+            print(f"[DEBUG] update_settings - Original data: {data}")
+            print(f"[DEBUG] update_settings - Allowed fields: {allowed_fields}")
             return jsonify({
                 "success": False,
                 "error": "No valid settings provided"
             }), 400
         
-        result = User.update_user_settings(user_id, settings)
-        
-        # Verify the update worked by fetching user again
-        if result.get('success'):
-            updated_user = User.get_user_by_id(user_id)
-            if updated_user:
-                updated_api_key = updated_user.get('api_key', '')
-                if updated_api_key:
-                    masked = updated_api_key[:4] + '*' * (len(updated_api_key) - 8) + updated_api_key[-4:] if len(updated_api_key) > 8 else '****'
+        # Validate products array if present
+        if 'products' in settings:
+            print(f"[DEBUG] update_settings - Validating products array: {settings['products']}")
+            if not isinstance(settings['products'], list):
+                print(f"[DEBUG] update_settings - ERROR: products is not a list, type: {type(settings['products'])}")
+                return jsonify({
+                    "success": False,
+                    "error": "Products must be an array"
+                }), 400
+            # Filter out products with empty URLs
+            print(f"[DEBUG] update_settings - Products before filtering: {settings['products']}")
+            valid_products = []
+            for p in settings['products']:
+                url = p.get('url', '') if isinstance(p, dict) else ''
+                if url and str(url).strip():
+                    valid_products.append(p)
                 else:
-                    print(f"[WARNING] API key not found in updated user object after save!")
+                    print(f"[DEBUG] update_settings - Filtered out product (empty URL): {p}")
+            
+            print(f"[DEBUG] update_settings - Valid products after filtering: {valid_products}")
+            if len(valid_products) == 0:
+                print(f"[DEBUG] update_settings - ERROR: No valid products after filtering")
+                return jsonify({
+                    "success": False,
+                    "error": "At least one product with a valid URL is required"
+                }), 400
+            # Update settings with only valid products
+            settings['products'] = valid_products
+            print(f"[DEBUG] update_settings - Final products in settings: {settings['products']}")
         
-        return jsonify(result)
+        # Save settings to JSON file instead of database
+        print(f"[DEBUG] update_settings - About to save settings to JSON file")
+        print(f"[DEBUG] update_settings - User ID: {user_id}")
+        print(f"[DEBUG] update_settings - Settings to save: {settings}")
+        
+        try:
+            try:
+                from backend.user_settings_storage import save_user_settings
+            except ImportError:
+                # Fallback for different import paths
+                try:
+                    from user_settings_storage import save_user_settings
+                except ImportError:
+                    import sys
+                    import os
+                    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+                    from user_settings_storage import save_user_settings
+            result = save_user_settings(user_id, settings)
+            print(f"[DEBUG] update_settings - Save result: {result}")
+            
+            if result.get('success'):
+                print(f"[DEBUG] update_settings - Settings saved successfully to JSON file")
+            else:
+                print(f"[DEBUG] update_settings - Failed to save settings: {result.get('error')}")
+            
+            return jsonify(result)
+        except ImportError as e:
+            print(f"[ERROR] update_settings - Failed to import user_settings_storage: {e}")
+            return jsonify({
+                "success": False,
+                "error": f"Failed to import settings storage: {str(e)}"
+            }), 500
+        except Exception as e:
+            print(f"[ERROR] update_settings - Exception while saving: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                "success": False,
+                "error": f"Failed to save settings: {str(e)}"
+            }), 500
         
     except Exception as e:
         return jsonify({
@@ -226,8 +312,24 @@ def get_user_api_config():
     """Get API configuration from current user and global settings"""
     try:
         user = request.current_user
+        user_id = user.get('_id') if user else None
         
-        api_key_raw = user.get('api_key', '') if user else ''
+        # Load settings from JSON file
+        try:
+            from backend.user_settings_storage import load_user_settings
+        except ImportError:
+            # Fallback for different import paths
+            try:
+                from user_settings_storage import load_user_settings
+            except ImportError:
+                import sys
+                import os
+                sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+                from user_settings_storage import load_user_settings
+        settings = load_user_settings(user_id) if user_id else {}
+        
+        # Get API key from JSON settings (preferred) or user object (fallback)
+        api_key_raw = settings.get('api_key', '') or (user.get('api_key', '') if user else '')
         
         # CRITICAL: Strip whitespace from API key (common issue)
         api_key = api_key_raw.strip() if api_key_raw else ''
@@ -747,12 +849,37 @@ def automation_start():
         landmark = data.get('landmark', '')
         total_orders = data.get('total_orders', 1)  # Default to 1 if not specified
         max_parallel_windows = data.get('max_parallel_windows', 1)  # Default to 1 if not specified
-        primary_product_url = data.get('primary_product_url', '')
-        secondary_product_url = data.get('secondary_product_url', '')
-        third_product_url = data.get('third_product_url', '')
-        primary_product_quantity = data.get('primary_product_quantity', '1')
-        secondary_product_quantity = data.get('secondary_product_quantity', '1')
-        third_product_quantity = data.get('third_product_quantity', '1')
+        # Get products array (new format) or convert from old format
+        products = data.get('products', [])
+        
+        # Convert from old format if products array is not provided (backward compatibility)
+        if not products or len(products) == 0:
+            products = []
+            if data.get('primary_product_url'):
+                products.append({
+                    'url': data.get('primary_product_url', ''),
+                    'quantity': int(data.get('primary_product_quantity', '1'))
+                })
+            if data.get('secondary_product_url'):
+                products.append({
+                    'url': data.get('secondary_product_url', ''),
+                    'quantity': int(data.get('secondary_product_quantity', '1'))
+                })
+            if data.get('third_product_url'):
+                products.append({
+                    'url': data.get('third_product_url', ''),
+                    'quantity': int(data.get('third_product_quantity', '1'))
+                })
+        
+        # Validate products
+        valid_products = [p for p in products if p.get('url') and p.get('url', '').strip()]
+        if len(valid_products) == 0:
+            return jsonify({
+                "success": False,
+                "error": "At least one product URL is required"
+            }), 400
+        
+        order_all = data.get('order_all', False)
         retry_orders = data.get('retry_orders', False)
         latitude = data.get('latitude', '26.994880')
         longitude = data.get('longitude', '75.774836')
@@ -766,12 +893,7 @@ def automation_start():
                 "error": "Name, house_flat_no, and landmark are required"
             }), 400
         
-        # Primary product URL is mandatory
-        if not primary_product_url or not primary_product_url.strip():
-            return jsonify({
-                "success": False,
-                "error": "Primary product URL is required"
-            }), 400
+        # Products validation is done above
         
         # Validate numeric inputs
         try:
@@ -854,12 +976,34 @@ def automation_start():
         env['SERVICE'] = config['service']
         env['TOTAL_ORDERS'] = str(total_orders)
         env['MAX_PARALLEL_WINDOWS'] = str(max_parallel_windows)
-        env['PRIMARY_PRODUCT_URL'] = primary_product_url
-        env['SECONDARY_PRODUCT_URL'] = secondary_product_url
-        env['THIRD_PRODUCT_URL'] = third_product_url
-        env['PRIMARY_PRODUCT_QUANTITY'] = str(primary_product_quantity)
-        env['SECONDARY_PRODUCT_QUANTITY'] = str(secondary_product_quantity)
-        env['THIRD_PRODUCT_QUANTITY'] = str(third_product_quantity)
+        
+        # Pass products as JSON string
+        import json
+        env['PRODUCTS_JSON'] = json.dumps(valid_products)
+        
+        # For backward compatibility, also set first 3 as PRIMARY/SECONDARY/THIRD
+        if len(valid_products) > 0:
+            env['PRIMARY_PRODUCT_URL'] = valid_products[0].get('url', '')
+            env['PRIMARY_PRODUCT_QUANTITY'] = str(valid_products[0].get('quantity', 1))
+        else:
+            env['PRIMARY_PRODUCT_URL'] = ''
+            env['PRIMARY_PRODUCT_QUANTITY'] = '1'
+            
+        if len(valid_products) > 1:
+            env['SECONDARY_PRODUCT_URL'] = valid_products[1].get('url', '')
+            env['SECONDARY_PRODUCT_QUANTITY'] = str(valid_products[1].get('quantity', 1))
+        else:
+            env['SECONDARY_PRODUCT_URL'] = ''
+            env['SECONDARY_PRODUCT_QUANTITY'] = '1'
+            
+        if len(valid_products) > 2:
+            env['THIRD_PRODUCT_URL'] = valid_products[2].get('url', '')
+            env['THIRD_PRODUCT_QUANTITY'] = str(valid_products[2].get('quantity', 1))
+        else:
+            env['THIRD_PRODUCT_URL'] = ''
+            env['THIRD_PRODUCT_QUANTITY'] = '1'
+        
+        env['ORDER_ALL'] = '1' if order_all else '0'
         env['RETRY_ORDERS'] = '1' if retry_orders else '0'
         env['LATITUDE'] = str(latitude)
         env['LONGITUDE'] = str(longitude)
@@ -1175,28 +1319,9 @@ def delete_user(user_id):
             "error": str(e)
         }), 500
 
-# Serve frontend in production
-if _is_production:
-    @app.route('/', defaults={'path': ''})
-    @app.route('/<path:path>')
-    def serve_frontend(path):
-        if path and os.path.exists(os.path.join(app.static_folder, path)):
-            return app.send_static_file(path)
-        return app.send_static_file('index.html')
-
 if __name__ == '__main__':
     host = os.environ.get('BACKEND_HOST', '0.0.0.0')
     port = int(os.environ.get('BACKEND_PORT', '5000'))
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     
-    # Use production WSGI server in Docker/production
-    if _is_production and not debug_mode:
-        try:
-            from waitress import serve
-            print(f"Starting production server on {host}:{port}")
-            serve(app, host=host, port=port, threads=4)
-        except ImportError:
-            print("waitress not installed, using Flask development server")
-            app.run(debug=False, host=host, port=port)
-    else:
-        app.run(debug=debug_mode, host=host, port=port)
+    app.run(debug=debug_mode, host=host, port=port)

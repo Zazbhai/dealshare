@@ -31,4 +31,7 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# User settings (contains sensitive data)
+user_settings/
+
 

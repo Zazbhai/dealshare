@@ -149,9 +149,8 @@ def main():
     active_processes = []
     order_queue = Queue()
     output_threads = {}  # Store output reading threads
-    session_start_delay = 10  # Increased delay to reduce parallel startup spike
+    session_start_delay = 2  # Wait 2 seconds between opening each session
     sessions_started = 0  # Track how many sessions have been started
-    retry_counts = {}  # Track retries per order number
     retried_orders = set()  # Track which orders have already been retried
     
     # Status file for tracking
@@ -263,25 +262,15 @@ def main():
                         # Logic for determining what to do on failure
                         should_retry = False
                         
-                        # 1. Check user-configured Retry (if enabled, exit code != 5, and not already retried by this mechanism)
+                        # Check user-configured Retry (only if enabled, exit code != 5, and not already retried)
                         if retry_orders and return_code != 5 and order_num not in retried_orders:
                             print(f"[INFO] Order {order_num} failed (return_code={return_code}) - Retrying once (User Setting)...")
                             write_to_log(f"[INFO] Order {order_num} failed (return_code={return_code}) - Retrying once (User Setting)...", worker_id=order_num)
                             retried_orders.add(order_num)
                             should_retry = True
-                        
-                        # 2. Check Crash Retry (if exit code != 0 and != 5, and not exceeded crash retry limit)
-                        if not should_retry and return_code != 5:
-                            max_retries = 2
-                            current_retries = retry_counts.get(order_num, 0)
-                            if current_retries < max_retries:
-                                retry_counts[order_num] = current_retries + 1
-                                print(f"[INFO] Order {order_num} crashed/failed (code {return_code}). Retrying ({retry_counts[order_num]}/{max_retries})...")
-                                write_to_log(f"[INFO] Re-queueing order {order_num} for retry.", worker_id=order_num)
-                                should_retry = True
                                 
                         if should_retry:
-                            # Re-queue order
+                            # Re-queue order for retry
                             order_queue.put(order_num)
                             # Do NOT increment completed/failure_count
                         else:

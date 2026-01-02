@@ -218,12 +218,11 @@ export const startAutomation = async (formData) => {
       landmark: formData.landmark,
       total_orders: formData.totalOrders || '1',
       max_parallel_windows: formData.maxParallelWindows || '1',
-      primary_product_url: formData.primaryProductUrl ? formData.primaryProductUrl.trim() : '',
-      secondary_product_url: formData.secondaryProductUrl ? formData.secondaryProductUrl.trim() : '',
-      third_product_url: formData.thirdProductUrl ? formData.thirdProductUrl.trim() : '',
-      primary_product_quantity: formData.primaryProductQuantity || '1',
-      secondary_product_quantity: formData.secondaryProductQuantity || '1',
-      third_product_quantity: formData.thirdProductQuantity || '1',
+      products: formData.products ? formData.products.map(p => ({
+        url: p.url ? p.url.trim() : '',
+        quantity: parseInt(p.quantity) || 1
+      })) : [],
+      order_all: formData.orderAll !== undefined ? formData.orderAll : false,
       retry_orders: formData.retryOrders !== undefined ? formData.retryOrders : false,
       latitude: formData.latitude || '26.994880',
       longitude: formData.longitude || '75.774836',

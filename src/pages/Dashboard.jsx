@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Play, Square, TrendingUp, Zap, Activity, FileText, User, Home, MapPin, Bug, Download, Eye, RefreshCw, AlertCircle, X, Edit2, Save, Link2, ChevronDown, Navigation2, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Play, Square, TrendingUp, Zap, Activity, FileText, User, Home, MapPin, Bug, Download, Eye, RefreshCw, AlertCircle, X, Edit2, Save, Link2, ChevronDown, Navigation2, ToggleLeft, ToggleRight, ShoppingCart, Plus, Trash2 } from 'lucide-react'
 import { getBalance, getGlobalSettings, startAutomation, stopAutomation, getAutomationStatus, getOrdersReport, downloadOrdersReport, getLogsList, viewLogFile, downloadLogFile } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { updateSettings } from '../services/auth'
@@ -19,12 +19,8 @@ function Dashboard() {
     totalOrders: '1',
     maxParallelWindows: '1',
     retryOrders: false, // Toggle to retry failed orders once
-    primaryProductUrl: '',
-    secondaryProductUrl: '',
-    thirdProductUrl: '',
-    primaryProductQuantity: '1',
-    secondaryProductQuantity: '1',
-    thirdProductQuantity: '1',
+    products: [{ url: '', quantity: '1' }], // Array of products - at least one required
+    orderAll: false, // Toggle to order all products
     latitude: '26.994880',
     longitude: '75.774836',
     selectLocation: true, // Toggle for location selection step
@@ -86,14 +82,40 @@ function Dashboard() {
         totalOrders: user.total_orders?.toString() || prev.totalOrders || '1',
         maxParallelWindows: user.max_parallel_windows?.toString() || prev.maxParallelWindows || '1',
         retryOrders: user.retry_orders !== undefined ? user.retry_orders : prev.retryOrders || false,
-        // Product URLs - prefer localStorage, then user data, then defaults
-        primaryProductUrl: productLinksData.primaryProductUrl || user.primary_product_url || prev.primaryProductUrl || '',
-        secondaryProductUrl: productLinksData.secondaryProductUrl || user.secondary_product_url || prev.secondaryProductUrl || '',
-        thirdProductUrl: productLinksData.thirdProductUrl || user.third_product_url || prev.thirdProductUrl || '',
-        // Product Quantities - prefer localStorage, then user data, then defaults
-        primaryProductQuantity: productLinksData.primaryProductQuantity || user.primary_product_quantity?.toString() || prev.primaryProductQuantity || '1',
-        secondaryProductQuantity: productLinksData.secondaryProductQuantity || user.secondary_product_quantity?.toString() || prev.secondaryProductQuantity || '1',
-        thirdProductQuantity: productLinksData.thirdProductQuantity || user.third_product_quantity?.toString() || prev.thirdProductQuantity || '1',
+        // Products array - convert from old format if needed
+        products: (() => {
+          // Check if new format exists
+          if (productLinksData.products && Array.isArray(productLinksData.products) && productLinksData.products.length > 0) {
+            return productLinksData.products
+          }
+          // Check if user has new format
+          if (user.products && Array.isArray(user.products) && user.products.length > 0) {
+            return user.products
+          }
+          // Convert from old format (backward compatibility)
+          const products = []
+          if (productLinksData.primaryProductUrl || user.primary_product_url) {
+            products.push({
+              url: productLinksData.primaryProductUrl || user.primary_product_url || '',
+              quantity: productLinksData.primaryProductQuantity || user.primary_product_quantity?.toString() || '1'
+            })
+          }
+          if (productLinksData.secondaryProductUrl || user.secondary_product_url) {
+            products.push({
+              url: productLinksData.secondaryProductUrl || user.secondary_product_url || '',
+              quantity: productLinksData.secondaryProductQuantity || user.secondary_product_quantity?.toString() || '1'
+            })
+          }
+          if (productLinksData.thirdProductUrl || user.third_product_url) {
+            products.push({
+              url: productLinksData.thirdProductUrl || user.third_product_url || '',
+              quantity: productLinksData.thirdProductQuantity || user.third_product_quantity?.toString() || '1'
+            })
+          }
+          // Return products or default to one empty product
+          return products.length > 0 ? products : prev.products || [{ url: '', quantity: '1' }]
+        })(),
+        orderAll: productLinksData.orderAll !== undefined ? productLinksData.orderAll : (user.order_all !== undefined ? user.order_all : prev.orderAll || false),
         // Location settings - prefer localStorage, then user data, then defaults
         latitude: locationSettingsData.latitude || user.latitude || prev.latitude || '26.994880',
         longitude: locationSettingsData.longitude || user.longitude || prev.longitude || '75.774836',
@@ -106,35 +128,47 @@ function Dashboard() {
 
   const handleSaveProductLinks = async () => {
     try {
+      // Validate at least one product has a URL
+      const validProducts = formData.products.filter(p => p.url && p.url.trim())
+      if (validProducts.length === 0) {
+        addLog('error', '❌ At least one product URL is required')
+        return
+      }
+
       const productLinksData = {
-        primaryProductUrl: formData.primaryProductUrl,
-        secondaryProductUrl: formData.secondaryProductUrl,
-        thirdProductUrl: formData.thirdProductUrl,
-        primaryProductQuantity: formData.primaryProductQuantity,
-        secondaryProductQuantity: formData.secondaryProductQuantity,
-        thirdProductQuantity: formData.thirdProductQuantity
+        products: formData.products,
+        orderAll: formData.orderAll
       }
 
       // Save to localStorage
       localStorage.setItem('savedProductLinks', JSON.stringify(productLinksData))
 
-      // Save to backend
+      // Save to backend - ensure we have valid data
       const settingsToSave = {
-        primary_product_url: formData.primaryProductUrl,
-        secondary_product_url: formData.secondaryProductUrl,
-        third_product_url: formData.thirdProductUrl,
-        primary_product_quantity: parseInt(formData.primaryProductQuantity) || 1,
-        secondary_product_quantity: parseInt(formData.secondaryProductQuantity) || 1,
-        third_product_quantity: parseInt(formData.thirdProductQuantity) || 1
+        products: (formData.products || []).map(p => ({
+          url: (p.url || '').trim(),
+          quantity: parseInt(p.quantity) || 1
+        })).filter(p => p.url), // Only include products with URLs
+        order_all: formData.orderAll !== undefined ? formData.orderAll : false
       }
 
+      // Validate we have at least one product
+      if (!settingsToSave.products || settingsToSave.products.length === 0) {
+        addLog('error', '❌ At least one product URL is required')
+        return
+      }
+
+      console.log('[DEBUG] Saving product links:', settingsToSave)
+      console.log('[DEBUG] Products array:', JSON.stringify(settingsToSave.products, null, 2))
       const result = await updateSettings(settingsToSave)
+      console.log('[DEBUG] Update result:', result)
       if (result.success) {
         await updateUserSettings(settingsToSave)
         addLog('success', '✅ Product links saved successfully')
         setIsProductLinksEditMode(false) // Exit edit mode
       } else {
-        addLog('error', `❌ Failed to save product links: ${result.error}`)
+        console.error('[DEBUG] Update failed:', result)
+        addLog('error', `❌ Failed to save product links: ${result.error || 'Unknown error'}`)
       }
     } catch (error) {
       addLog('error', `❌ Error saving product links: ${error.message}`)
@@ -300,12 +334,10 @@ function Dashboard() {
       }
     }
 
-    // Get product URLs - Primary is mandatory, others are optional
-    let primaryUrl = formData.primaryProductUrl ? formData.primaryProductUrl.trim() : ''
-
-    // Primary URL is mandatory
-    if (!primaryUrl) {
-      addLog('error', '❌ Primary Product URL is required. Please configure it.')
+    // Validate at least one product URL is provided
+    const validProducts = formData.products.filter(p => p.url && p.url.trim())
+    if (validProducts.length === 0) {
+      addLog('error', '❌ At least one product URL is required. Please configure it.')
       return
     }
 
@@ -367,6 +399,33 @@ function Dashboard() {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleProductChange = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      products: prev.products.map((product, i) =>
+        i === index ? { ...product, [field]: value } : product
+      )
+    }))
+  }
+
+  const handleAddProduct = () => {
+    setFormData(prev => ({
+      ...prev,
+      products: [...prev.products, { url: '', quantity: '1' }]
+    }))
+  }
+
+  const handleRemoveProduct = (index) => {
+    if (formData.products.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        products: prev.products.filter((_, i) => i !== index)
+      }))
+    } else {
+      addLog('error', '❌ At least one product is required')
+    }
   }
 
   const loadOrdersReport = async () => {
@@ -830,7 +889,7 @@ function Dashboard() {
                       </label>
                       <button
                         onClick={() => handleInputChange('retryOrders', !formData.retryOrders)}
-                        disabled={isRunning || !isLocationSettingsEditMode}
+                        disabled={isRunning || !isEditMode}
                         className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed ${formData.retryOrders ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-600'
                           }`}
                         type="button"
@@ -926,105 +985,111 @@ function Dashboard() {
                 className="overflow-hidden"
               >
                 <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 space-y-4">
-                  {/* Primary Product URL */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{
-                      opacity: isProductLinksOpen ? 1 : 0,
-                      x: isProductLinksOpen ? 0 : -20
-                    }}
-                    transition={{ duration: 0.3, delay: 0.1 }}
-                  >
-                    <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                      <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                      Primary Product URL <span className="text-red-400">*</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={formData.primaryProductUrl}
-                        onChange={(e) => handleInputChange('primaryProductUrl', e.target.value)}
-                        placeholder="https://www.dealshare.in/pname/..."
-                        disabled={isRunning || !isProductLinksEditMode}
-                        className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
-                      />
-                      <input
-                        type="number"
-                        min="1"
-                        value={formData.primaryProductQuantity}
-                        onChange={(e) => handleInputChange('primaryProductQuantity', e.target.value)}
-                        placeholder="Qty"
-                        disabled={isRunning || !isProductLinksEditMode}
-                        className="w-20 px-3 py-2.5 sm:py-3 bg-black/40 border border-blue-500/50 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all text-center"
-                      />
-                    </div>
-                  </motion.div>
+                  {/* Dynamic Product List */}
+                  {formData.products.map((product, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{
+                        opacity: isProductLinksOpen ? 1 : 0,
+                        x: isProductLinksOpen ? 0 : -20
+                      }}
+                      transition={{ duration: 0.3, delay: 0.1 + (index * 0.05) }}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 flex-1">
+                          <div className={`w-2 h-2 rounded-full ${index === 0 ? 'bg-blue-400' : index === 1 ? 'bg-purple-400' : index === 2 ? 'bg-pink-400' : 'bg-green-400'}`}></div>
+                          Product {index + 1} {index === 0 && <span className="text-red-400">*</span>}
+                        </label>
+                        {formData.products.length > 1 && isProductLinksEditMode && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleRemoveProduct(index)}
+                            disabled={isRunning}
+                            className="p-1.5 rounded-lg transition-all bg-red-600/20 hover:bg-red-600/40 text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Remove product"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </motion.button>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={product.url}
+                          onChange={(e) => handleProductChange(index, 'url', e.target.value)}
+                          placeholder="https://www.dealshare.in/pname/..."
+                          disabled={isRunning || !isProductLinksEditMode}
+                          className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
+                        />
+                        <input
+                          type="number"
+                          min="1"
+                          value={product.quantity}
+                          onChange={(e) => handleProductChange(index, 'quantity', e.target.value)}
+                          placeholder="Qty"
+                          disabled={isRunning || !isProductLinksEditMode}
+                          className="w-20 px-3 py-2.5 sm:py-3 bg-black/40 border border-blue-500/50 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all text-center"
+                        />
+                      </div>
+                    </motion.div>
+                  ))}
 
-                  {/* Secondary Product URL */}
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{
-                      opacity: isProductLinksOpen ? 1 : 0,
-                      x: isProductLinksOpen ? 0 : -20
-                    }}
-                    transition={{ duration: 0.3, delay: 0.15 }}
-                  >
-                    <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                      <div className="w-2 h-2 rounded-full bg-purple-400"></div>
-                      Secondary Product URL <span className="text-gray-500 text-xs">(Optional)</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={formData.secondaryProductUrl}
-                        onChange={(e) => handleInputChange('secondaryProductUrl', e.target.value)}
-                        placeholder="https://www.dealshare.in/pname/..."
-                        disabled={isRunning || !isProductLinksEditMode}
-                        className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
-                      />
-                      <input
-                        type="number"
-                        min="1"
-                        value={formData.secondaryProductQuantity}
-                        onChange={(e) => handleInputChange('secondaryProductQuantity', e.target.value)}
-                        placeholder="Qty"
-                        disabled={isRunning || !isProductLinksEditMode}
-                        className="w-20 px-3 py-2.5 sm:py-3 bg-black/40 border border-purple-500/50 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all text-center"
-                      />
-                    </div>
-                  </motion.div>
+                  {/* Add Product Button */}
+                  {isProductLinksEditMode && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: isProductLinksOpen ? 1 : 0 }}
+                      transition={{ duration: 0.3, delay: 0.1 + (formData.products.length * 0.05) }}
+                    >
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleAddProduct}
+                        disabled={isRunning}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 rounded-lg text-blue-400 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span className="text-sm">Add Product</span>
+                      </motion.button>
+                    </motion.div>
+                  )}
 
-                  {/* Third Product URL */}
+                  {/* Order All Toggle */}
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{
                       opacity: isProductLinksOpen ? 1 : 0,
                       x: isProductLinksOpen ? 0 : -20
                     }}
-                    transition={{ duration: 0.3, delay: 0.2 }}
+                    transition={{ duration: 0.3, delay: 0.25 }}
+                    className="pt-4 border-t border-gray-700/50"
                   >
-                    <label className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gray-300 mb-2">
-                      <div className="w-2 h-2 rounded-full bg-pink-400"></div>
-                      Third Product URL <span className="text-gray-500 text-xs">(Optional)</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={formData.thirdProductUrl}
-                        onChange={(e) => handleInputChange('thirdProductUrl', e.target.value)}
-                        placeholder="https://www.dealshare.in/pname/..."
-                        disabled={isRunning || !isProductLinksEditMode}
-                        className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border border-gray-600 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all"
-                      />
-                      <input
-                        type="number"
-                        min="1"
-                        value={formData.thirdProductQuantity}
-                        onChange={(e) => handleInputChange('thirdProductQuantity', e.target.value)}
-                        placeholder="Qty"
-                        disabled={isRunning || !isProductLinksEditMode}
-                        className="w-20 px-3 py-2.5 sm:py-3 bg-black/40 border border-pink-500/50 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base transition-all text-center"
-                      />
+                    <div className="p-4 bg-black/30 rounded-lg border border-blue-500/20">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="flex items-center gap-2 text-sm sm:text-base font-semibold text-gray-300">
+                          <ShoppingCart className="w-5 h-5 text-blue-400" />
+                          Order All
+                        </label>
+                        <button
+                          onClick={() => handleInputChange('orderAll', !formData.orderAll)}
+                          disabled={isRunning || !isProductLinksEditMode}
+                          className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed ${formData.orderAll ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gray-600'
+                            }`}
+                          type="button"
+                        >
+                          <span
+                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${formData.orderAll ? 'translate-x-8' : 'translate-x-1'
+                              }`}
+                          />
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        {formData.orderAll
+                          ? 'All configured products will be added to cart with their specified quantities, then cart will be checked for errors'
+                          : 'Products will be added one by one (without opening bag), then cart will be checked once at the end for errors'}
+                      </p>
                     </div>
                   </motion.div>
 
@@ -1032,12 +1097,12 @@ function Dashboard() {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: isProductLinksOpen ? 1 : 0 }}
-                    transition={{ duration: 0.3, delay: 0.25 }}
+                    transition={{ duration: 0.3, delay: 0.3 }}
                     className="mt-4 pt-4 border-t border-gray-700/50"
                   >
                     <p className="text-xs text-gray-400 flex items-start gap-2 mb-4">
                       <Zap className="w-3 h-3 mt-0.5 text-blue-400 flex-shrink-0" />
-                      <span>Automation will try URLs in order: Primary → Secondary → Third. If all 3 fail, automation stops.</span>
+                      <span>Automation will process products in the order listed. At least one product URL is required.</span>
                     </p>
                   </motion.div>
                 </div>
@@ -1237,7 +1302,7 @@ function Dashboard() {
                   onClick={(e) => {
                     handleStart()
                   }}
-                  disabled={!formData.name.trim() || !formData.houseFlatNo.trim() || !formData.landmark.trim() || !formData.totalOrders || !formData.maxParallelWindows || !formData.primaryProductUrl.trim()}
+                  disabled={!formData.name.trim() || !formData.houseFlatNo.trim() || !formData.landmark.trim() || !formData.totalOrders || !formData.maxParallelWindows || !formData.products || !formData.products.some(p => p.url && p.url.trim())}
                   className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-bold text-base sm:text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 shadow-xl"
                 >
                   <Play className="w-5 h-5 sm:w-6 sm:h-6" />
