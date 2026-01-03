@@ -31,10 +31,12 @@ def save_order_to_csv(screenshot_url, status='success', worker_log_path=None, or
     
     pastebin_url = ''
     
-    # If order failed, upload log to Pastebin
+    # If order failed, save log locally
     if status != 'success' and status.lower().startswith('failed'):
         try:
-            from pastebin_upload import upload_to_pastebin
+            # Setup failed_logs directory
+            failed_logs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'failed_logs')
+            os.makedirs(failed_logs_dir, exist_ok=True)
             
             # Read worker log if path provided
             log_content = ''
@@ -53,12 +55,19 @@ def save_order_to_csv(screenshot_url, status='success', worker_log_path=None, or
             full_log += f"{'='*50}\n\n"
             full_log += log_content if log_content else "No log file available"
             
-            # Upload to Pastebin
-            title = f"Failed Order {order_number or 'Unknown'} - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-            pastebin_url = upload_to_pastebin(full_log, title) or ''
+            # Save to local file
+            timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+            log_filename = f"failed_order_{order_number or 'unknown'}_{timestamp_str}.txt"
+            log_filepath = os.path.join(failed_logs_dir, log_filename)
+            
+            with open(log_filepath, 'w', encoding='utf-8') as f:
+                f.write(full_log)
+                
+            print(f"✅ Saved failed order log to: {log_filepath}")
+            pastebin_url = log_filepath
             
         except Exception as e:
-            print(f"[ERROR] Failed to upload log to Pastebin: {e}")
+            print(f"[ERROR] Failed to save local log: {e}")
             pastebin_url = ''
     
     with _csv_lock:

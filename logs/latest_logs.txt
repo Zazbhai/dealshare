@@ -1,41 +1,657 @@
-[2026-01-03 16:38:00] [INFO] Starting automation: 1 orders, max 1 parallel windows, retry: disabled
-[2026-01-03 16:38:06] [ORDER 1 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
-[2026-01-03 16:38:08] [ORDER 1 STDOUT] 📍 Attempt 1/3
-[2026-01-03 16:38:08] [ORDER 1 STDOUT] 👤 Attempting to click user icon...
-[2026-01-03 16:38:10] [ORDER 1 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
-[2026-01-03 16:38:11] [ORDER 1 STDOUT] ✅ User icon clicked (regular)
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG] Step 1: Reading environment variables...
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG]   API_KEY: SET
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG]   COUNTRY: 22
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG]   OPERATOR: 10
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG]   SERVICE: lmeh
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG] ========================================
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG] Step 2: API configuration validated successfully
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] 📱 Requesting phone number from API...
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG] Step 4: Calling get_number() with:
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG]   service=lmeh
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG]   country=22
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG]   operator=10
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG]   api_key=7189...7123
-[2026-01-03 16:38:12] [ORDER 1 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
-[2026-01-03 16:38:14] [ORDER 1 STDOUT] [DEBUG] Step 5: get_number() returned: ('6958f89d11926475c9e49dbb', '7569020794')
-[2026-01-03 16:38:14] [ORDER 1 STDOUT] ✅ Got phone number: 7569020794 (request_id: 6958f89d11926475c9e49dbb)
-[2026-01-03 16:38:15] [ORDER 1 STDOUT] ⏳ Waiting for OTP (max 2 minutes)...
-[2026-01-03 16:40:18] [ORDER 1 STDOUT] ❌ Failed to get OTP within 2 minutes. Cancelling number...
-[2026-01-03 16:40:20] [ORDER 1 STDOUT] ❌ CRITICAL FAILURE: Number cancelled due to OTP timeout
-[2026-01-03 16:40:20] [ORDER 1 STDOUT] 📸 Screenshot taken: failed_1767438620.png
-[2026-01-03 16:41:24] [ORDER 1 STDOUT] [ERROR] Imgbb API returned status 503: <!DOCTYPE html>
-[2026-01-03 16:41:24] [ORDER 1 STDOUT] <html>
-[2026-01-03 16:41:24] [ORDER 1 STDOUT] <head>
-[2026-01-03 16:41:24] [ORDER 1 STDOUT] <title>Down for maintenance...</title>
-[2026-01-03 16:41:24] [ORDER 1 STDOUT] <style>h1{font-size:50px}body{background-color:#fff;text-align:center;padding:150px;font:20px Helvetica,sans-serif;color:#191919}#i
-[2026-01-03 16:41:27] [ORDER 1 STDOUT] ✅ Uploaded to Pastebin: https://pastebin.com/yuPEDHBM
-[2026-01-03 16:41:27] [ORDER 1 STDOUT] 📝 Failure logged to CSV
-[2026-01-03 16:41:27] [INFO] Order 1 completed (FAILED, return_code=1) - 1/1 total
-[2026-01-03 16:41:28] [INFO] All 1 orders completed!
-[2026-01-03 16:41:28] [INFO] Final stats: Success=0, Failure=1
-[2026-01-03 16:41:28] [DEBUG] ========== AUTOMATION WORKER FINISHED ==========
+[2026-01-03 17:49:04] [INFO] Starting automation: 19 orders, max 19 parallel windows, retry: disabled
+[2026-01-03 17:49:05] [INFO] Waiting 2 seconds before starting order 2/19...
+[2026-01-03 17:49:07] [INFO] Waiting 2 seconds before starting order 3/19...
+[2026-01-03 17:49:09] [INFO] Waiting 2 seconds before starting order 4/19...
+[2026-01-03 17:49:10] [ORDER 1 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:11] [INFO] Waiting 2 seconds before starting order 5/19...
+[2026-01-03 17:49:11] [ORDER 2 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:12] [ORDER 1 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:12] [ORDER 1 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:13] [INFO] Waiting 2 seconds before starting order 6/19...
+[2026-01-03 17:49:13] [ORDER 2 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:13] [ORDER 2 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:14] [ORDER 3 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:15] [INFO] Waiting 2 seconds before starting order 7/19...
+[2026-01-03 17:49:15] [ORDER 1 STDOUT] ✅ Found user icon with selector: div[class*='UserOptions_userContainer']
+[2026-01-03 17:49:16] [ORDER 2 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:16] [ORDER 3 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:16] [ORDER 3 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:16] [ORDER 1 STDOUT] ✅ User icon clicked (regular)
+[2026-01-03 17:49:17] [INFO] Waiting 2 seconds before starting order 8/19...
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:17] [ORDER 1 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:17] [ORDER 2 STDOUT] ✅ User icon clicked (regular)
+[2026-01-03 17:49:17] [ORDER 4 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:18] [ORDER 3 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:19] [INFO] Waiting 2 seconds before starting order 9/19...
+[2026-01-03 17:49:19] [ORDER 4 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:19] [ORDER 4 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:20] [ORDER 3 STDOUT] ✅ User icon clicked (regular)
+[2026-01-03 17:49:21] [INFO] Waiting 2 seconds before starting order 10/19...
+[2026-01-03 17:49:21] [ORDER 2 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:49:21] [ORDER 2 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:21] [ORDER 3 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:21] [ORDER 2 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442761.png
+[2026-01-03 17:49:21] [ORDER 2 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:49:22] [ORDER 5 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:22] [ORDER 4 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:22] [ORDER 1 STDOUT] [DEBUG] Step 5: get_number() returned: ('69590947e5c7f550cb0e4846', '7353139297')
+[2026-01-03 17:49:22] [ORDER 1 STDOUT] ✅ Got phone number: 7353139297 (request_id: 69590947e5c7f550cb0e4846)
+[2026-01-03 17:49:22] [ORDER 1 STDOUT] ⏳ Waiting for OTP (max 2 minutes)...
+[2026-01-03 17:49:22] [ORDER 2 STDOUT] ✅ Browser closed
+[2026-01-03 17:49:22] [ORDER 2 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442761.png
+[2026-01-03 17:49:23] [INFO] Waiting 2 seconds before starting order 11/19...
+[2026-01-03 17:49:23] [ORDER 3 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:49:23] [ORDER 3 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:49:24] [ORDER 5 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:24] [ORDER 5 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:24] [ORDER 3 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442763.png
+[2026-01-03 17:49:24] [ORDER 3 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:49:24] [ORDER 4 STDOUT] ✅ User icon clicked (regular)
+[2026-01-03 17:49:24] [ORDER 2 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_2_20260103_174924.txt
+[2026-01-03 17:49:24] [ORDER 2 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:49:25] [ORDER 6 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:25] [INFO] Waiting 2 seconds before starting order 12/19...
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:25] [ORDER 4 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:26] [ORDER 7 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:26] [ORDER 5 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:26] [ORDER 3 STDOUT] ✅ Browser closed
+[2026-01-03 17:49:26] [ORDER 3 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442763.png
+[2026-01-03 17:49:27] [ORDER 6 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:27] [ORDER 6 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:27] [INFO] Waiting 2 seconds before starting order 13/19...
+[2026-01-03 17:49:28] [ORDER 5 STDOUT] ✅ User icon clicked (regular)
+[2026-01-03 17:49:28] [ORDER 4 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:49:28] [ORDER 4 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:49:28] [ORDER 7 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:28] [ORDER 7 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:28] [ORDER 3 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_3_20260103_174928.txt
+[2026-01-03 17:49:28] [ORDER 3 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:49:28] [ORDER 4 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442768.png
+[2026-01-03 17:49:28] [ORDER 4 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:29] [ORDER 5 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:29] [ORDER 6 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:29] [ORDER 8 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:29] [ORDER 4 STDOUT] ✅ Browser closed
+[2026-01-03 17:49:29] [ORDER 4 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442768.png
+[2026-01-03 17:49:29] [INFO] Waiting 2 seconds before starting order 14/19...
+[2026-01-03 17:49:30] [ORDER 7 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:30] [ORDER 5 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:49:30] [ORDER 5 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:49:31] [ORDER 6 STDOUT] ✅ User icon clicked (regular)
+[2026-01-03 17:49:31] [ORDER 5 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442770.png
+[2026-01-03 17:49:31] [ORDER 5 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:49:31] [ORDER 8 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:31] [ORDER 8 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:31] [ORDER 4 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_4_20260103_174931.txt
+[2026-01-03 17:49:31] [ORDER 4 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:49:31] [INFO] Waiting 2 seconds before starting order 15/19...
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:32] [ORDER 6 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:32] [ORDER 7 STDOUT] ✅ User icon clicked (regular)
+[2026-01-03 17:49:32] [ORDER 9 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:32] [ORDER 5 STDOUT] ✅ Browser closed
+[2026-01-03 17:49:32] [ORDER 5 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442770.png
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:33] [ORDER 7 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:34] [ORDER 8 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:34] [INFO] Waiting 2 seconds before starting order 16/19...
+[2026-01-03 17:49:34] [ORDER 9 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:34] [ORDER 9 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:34] [ORDER 6 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:49:34] [ORDER 6 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:49:34] [ORDER 5 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_5_20260103_174934.txt
+[2026-01-03 17:49:34] [ORDER 5 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:49:35] [ORDER 7 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:49:35] [ORDER 7 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:49:35] [ORDER 6 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442774.png
+[2026-01-03 17:49:35] [ORDER 6 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:49:35] [ORDER 7 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442775.png
+[2026-01-03 17:49:35] [ORDER 7 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:49:36] [INFO] Waiting 2 seconds before starting order 17/19...
+[2026-01-03 17:49:36] [ORDER 11 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:36] [ORDER 8 STDOUT] ✅ User icon clicked (regular)
+[2026-01-03 17:49:36] [ORDER 9 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:37] [ORDER 7 STDOUT] ✅ Browser closed
+[2026-01-03 17:49:37] [ORDER 7 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442775.png
+[2026-01-03 17:49:37] [ORDER 6 STDOUT] ✅ Browser closed
+[2026-01-03 17:49:37] [ORDER 6 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442774.png
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:37] [ORDER 8 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:38] [INFO] Waiting 2 seconds before starting order 18/19...
+[2026-01-03 17:49:38] [ORDER 11 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:38] [ORDER 11 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:38] [ORDER 12 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:39] [ORDER 7 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_7_20260103_174939.txt
+[2026-01-03 17:49:39] [ORDER 7 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:49:39] [ORDER 6 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_6_20260103_174939.txt
+[2026-01-03 17:49:39] [ORDER 6 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:49:40] [INFO] Waiting 2 seconds before starting order 19/19...
+[2026-01-03 17:49:40] [ORDER 11 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:40] [ORDER 12 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:40] [ORDER 12 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:40] [ORDER 9 STDOUT] ✅ User icon clicked (force)
+[2026-01-03 17:49:41] [ORDER 8 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:49:41] [ORDER 8 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:41] [ORDER 8 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442781.png
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:41] [ORDER 8 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:41] [ORDER 9 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:42] [INFO] Order 2 completed (FAILED, return_code=1) - 1/19 total
+[2026-01-03 17:49:42] [INFO] Order 3 completed (FAILED, return_code=1) - 2/19 total
+[2026-01-03 17:49:42] [INFO] Order 4 completed (FAILED, return_code=1) - 3/19 total
+[2026-01-03 17:49:42] [INFO] Order 5 completed (FAILED, return_code=1) - 4/19 total
+[2026-01-03 17:49:42] [INFO] Order 6 completed (FAILED, return_code=1) - 5/19 total
+[2026-01-03 17:49:42] [INFO] Order 7 completed (FAILED, return_code=1) - 6/19 total
+[2026-01-03 17:49:42] [ORDER 12 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:42] [ORDER 8 STDOUT] ✅ Browser closed
+[2026-01-03 17:49:42] [ORDER 8 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442781.png
+[2026-01-03 17:49:44] [ORDER 11 STDOUT] ✅ User icon clicked (force)
+[2026-01-03 17:49:44] [ORDER 8 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_8_20260103_174944.txt
+[2026-01-03 17:49:44] [ORDER 8 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:49:45] [INFO] Order 8 completed (FAILED, return_code=1) - 7/19 total
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:45] [ORDER 11 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:46] [ORDER 12 STDOUT] ✅ User icon clicked (force)
+[2026-01-03 17:49:46] [ORDER 13 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:46] [ORDER 9 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:49:46] [ORDER 9 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:47] [ORDER 12 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:47] [ORDER 9 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442786.png
+[2026-01-03 17:49:47] [ORDER 9 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:49:47] [ORDER 10 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:47] [ORDER 14 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:48] [ORDER 9 STDOUT] ✅ Browser closed
+[2026-01-03 17:49:48] [ORDER 9 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442786.png
+[2026-01-03 17:49:48] [ORDER 13 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:48] [ORDER 13 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:49] [ORDER 11 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:49:49] [ORDER 11 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:49:49] [ORDER 15 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:49] [ORDER 11 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442789.png
+[2026-01-03 17:49:49] [ORDER 11 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:49:49] [ORDER 10 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:49] [ORDER 10 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:49] [ORDER 14 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:49] [ORDER 14 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:50] [ORDER 11 STDOUT] ✅ Browser closed
+[2026-01-03 17:49:50] [ORDER 11 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442789.png
+[2026-01-03 17:49:50] [ORDER 9 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_9_20260103_174950.txt
+[2026-01-03 17:49:50] [ORDER 9 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:49:50] [ORDER 16 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:50] [INFO] Order 9 completed (FAILED, return_code=1) - 8/19 total
+[2026-01-03 17:49:50] [ORDER 13 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:51] [ORDER 17 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:51] [ORDER 15 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:51] [ORDER 15 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:51] [ORDER 12 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:49:51] [ORDER 12 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:49:51] [ORDER 10 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:52] [ORDER 14 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:52] [ORDER 11 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_11_20260103_174952.txt
+[2026-01-03 17:49:52] [ORDER 11 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:49:52] [ORDER 12 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442791.png
+[2026-01-03 17:49:52] [ORDER 12 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:49:52] [ORDER 16 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:52] [ORDER 16 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:52] [ORDER 12 STDOUT] ✅ Browser closed
+[2026-01-03 17:49:52] [ORDER 12 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442791.png
+[2026-01-03 17:49:52] [INFO] Order 11 completed (FAILED, return_code=1) - 9/19 total
+[2026-01-03 17:49:53] [ORDER 17 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:53] [ORDER 17 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:53] [ORDER 15 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:54] [ORDER 16 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:54] [ORDER 12 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_12_20260103_174954.txt
+[2026-01-03 17:49:54] [ORDER 12 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:49:54] [INFO] Order 12 completed (FAILED, return_code=1) - 10/19 total
+[2026-01-03 17:49:54] [ORDER 19 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:54] [ORDER 13 STDOUT] ✅ User icon clicked (force)
+[2026-01-03 17:49:55] [ORDER 17 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:55] [ORDER 10 STDOUT] ✅ User icon clicked (force)
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:55] [ORDER 13 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:56] [ORDER 14 STDOUT] ✅ User icon clicked (force)
+[2026-01-03 17:49:56] [ORDER 19 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:56] [ORDER 19 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:56] [ORDER 10 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:57] [ORDER 14 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:57] [ORDER 15 STDOUT] ✅ User icon clicked (force)
+[2026-01-03 17:49:58] [ORDER 16 STDOUT] ✅ User icon clicked (force)
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:58] [ORDER 15 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:58] [ORDER 19 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:59] [ORDER 16 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:59] [ORDER 17 STDOUT] ✅ User icon clicked (force)
+[2026-01-03 17:50:00] [ORDER 13 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:50:00] [ORDER 13 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:50:00] [ORDER 17 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:50:00] [ORDER 14 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:50:00] [ORDER 14 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:50:00] [ORDER 13 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442800.png
+[2026-01-03 17:50:00] [ORDER 13 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:50:00] [ORDER 14 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442800.png
+[2026-01-03 17:50:00] [ORDER 14 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:50:01] [ORDER 10 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:50:01] [ORDER 10 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:50:01] [ORDER 10 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442801.png
+[2026-01-03 17:50:01] [ORDER 10 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:50:02] [ORDER 13 STDOUT] ✅ Browser closed
+[2026-01-03 17:50:02] [ORDER 13 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442800.png
+[2026-01-03 17:50:02] [ORDER 14 STDOUT] ✅ Browser closed
+[2026-01-03 17:50:02] [ORDER 14 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442800.png
+[2026-01-03 17:50:02] [ORDER 10 STDOUT] ✅ Browser closed
+[2026-01-03 17:50:02] [ORDER 10 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442801.png
+[2026-01-03 17:50:02] [ORDER 15 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:50:02] [ORDER 15 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:50:02] [ORDER 15 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442802.png
+[2026-01-03 17:50:02] [ORDER 15 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:50:02] [ORDER 19 STDOUT] ✅ User icon clicked (force)
+[2026-01-03 17:50:02] [ORDER 16 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:50:02] [ORDER 16 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:50:03] [ORDER 15 STDOUT] ✅ Browser closed
+[2026-01-03 17:50:03] [ORDER 16 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442802.png
+[2026-01-03 17:50:03] [ORDER 16 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:50:03] [ORDER 15 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442802.png
+[2026-01-03 17:50:03] [ORDER 16 STDOUT] ✅ Browser closed
+[2026-01-03 17:50:03] [ORDER 16 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442802.png
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:50:03] [ORDER 17 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:50:03] [ORDER 17 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:50:03] [ORDER 19 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:50:04] [ORDER 17 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442803.png
+[2026-01-03 17:50:04] [ORDER 17 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:50:04] [ORDER 13 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_13_20260103_175004.txt
+[2026-01-03 17:50:04] [ORDER 13 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:50:04] [ORDER 17 STDOUT] ✅ Browser closed
+[2026-01-03 17:50:04] [ORDER 17 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442803.png
+[2026-01-03 17:50:04] [ORDER 14 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_14_20260103_175004.txt
+[2026-01-03 17:50:04] [ORDER 14 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:50:04] [ORDER 10 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_10_20260103_175004.txt
+[2026-01-03 17:50:04] [ORDER 10 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:50:04] [INFO] Order 10 completed (FAILED, return_code=1) - 11/19 total
+[2026-01-03 17:50:04] [INFO] Order 13 completed (FAILED, return_code=1) - 12/19 total
+[2026-01-03 17:50:04] [INFO] Order 14 completed (FAILED, return_code=1) - 13/19 total
+[2026-01-03 17:50:04] [ORDER 18 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:50:05] [ORDER 15 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_15_20260103_175005.txt
+[2026-01-03 17:50:05] [ORDER 15 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:50:05] [ORDER 19 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:50:05] [ORDER 19 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:50:05] [INFO] Order 15 completed (FAILED, return_code=1) - 14/19 total
+[2026-01-03 17:50:05] [ORDER 16 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_16_20260103_175005.txt
+[2026-01-03 17:50:05] [ORDER 16 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:50:05] [ORDER 19 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442805.png
+[2026-01-03 17:50:05] [ORDER 19 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:50:05] [ORDER 19 STDOUT] ✅ Browser closed
+[2026-01-03 17:50:05] [ORDER 19 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442805.png
+[2026-01-03 17:50:05] [INFO] Order 16 completed (FAILED, return_code=1) - 15/19 total
+[2026-01-03 17:50:06] [ORDER 17 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_17_20260103_175006.txt
+[2026-01-03 17:50:06] [ORDER 17 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:50:06] [INFO] Order 17 completed (FAILED, return_code=1) - 16/19 total
+[2026-01-03 17:50:06] [ORDER 18 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:50:06] [ORDER 18 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:50:07] [ORDER 19 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_19_20260103_175007.txt
+[2026-01-03 17:50:07] [ORDER 19 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:50:07] [INFO] Order 19 completed (FAILED, return_code=1) - 17/19 total
+[2026-01-03 17:50:08] [ORDER 18 STDOUT] ❌ Could not find user icon
+[2026-01-03 17:50:09] [ORDER 18 STDOUT] ⚠️ Attempt failed, retrying... (User icon not found)
+[2026-01-03 17:50:11] [ORDER 18 STDOUT] 📍 Attempt 2/3
+[2026-01-03 17:50:11] [ORDER 18 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:50:13] [ORDER 18 STDOUT] ❌ Could not find user icon
+[2026-01-03 17:50:13] [ORDER 18 STDOUT] ⚠️ Attempt failed, retrying... (User icon not found)
+[2026-01-03 17:50:15] [ORDER 18 STDOUT] 📍 Attempt 3/3
+[2026-01-03 17:50:15] [ORDER 18 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:50:17] [ORDER 18 STDOUT] ❌ Could not find user icon
+[2026-01-03 17:50:17] [ORDER 18 STDOUT] ❌ All attempts failed: Page.screenshot: Target page, context or browser has been closed
+[2026-01-03 17:50:18] [ORDER 18 STDERR] Traceback (most recent call last):
+[2026-01-03 17:50:18] [ORDER 18 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 1491, in <module>
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     main()
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     ~~~~^^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 945, in main
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     click_user_icon_with_retry(page)
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 260, in click_user_icon_with_retry
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     click_user_icon(page)
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     ~~~~~~~~~~~~~~~^^^^^^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]   File "c:\Users\zgarm\OneDrive\Desktop\Deal share\main.py", line 194, in click_user_icon
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     page.screenshot(path="user_icon_not_found.png")
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\sync_api\_generated.py", line 9784, in screenshot
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     self._sync(
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     ~~~~~~~~~~^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]         self._impl_obj.screenshot(
+[2026-01-03 17:50:18] [ORDER 18 STDERR]         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     ...<13 lines>...
+[2026-01-03 17:50:18] [ORDER 18 STDERR]         )
+[2026-01-03 17:50:18] [ORDER 18 STDERR]         ^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     )
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     ^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_sync_base.py", line 115, in _sync
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     return task.result()
+[2026-01-03 17:50:18] [ORDER 18 STDERR]            ~~~~~~~~~~~^^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_page.py", line 818, in screenshot
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     encoded_binary = await self._channel.send(
+[2026-01-03 17:50:18] [ORDER 18 STDERR]                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]         "screenshot", self._timeout_settings.timeout, params
+[2026-01-03 17:50:18] [ORDER 18 STDERR]         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     )
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     ^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_connection.py", line 69, in send
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     return await self._connection.wrap_api_call(
+[2026-01-03 17:50:18] [ORDER 18 STDERR]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     ...<3 lines>...
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     )
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     ^
+[2026-01-03 17:50:18] [ORDER 18 STDERR]   File "C:\Users\zgarm\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\_impl\_connection.py", line 558, in wrap_api_call
+[2026-01-03 17:50:18] [ORDER 18 STDERR]     raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+[2026-01-03 17:50:18] [ORDER 18 STDERR] playwright._impl._errors.TargetClosedError: Page.screenshot: Target page, context or browser has been closed
+[2026-01-03 17:50:18] [INFO] Order 18 completed (FAILED, return_code=1) - 18/19 total
+[2026-01-03 17:51:26] [ORDER 1 STDOUT] ❌ Failed to get OTP within 2 minutes. Cancelling number...
+[2026-01-03 17:51:28] [ORDER 1 STDOUT] ❌ CRITICAL FAILURE: Number cancelled due to OTP timeout
+[2026-01-03 17:51:28] [ORDER 1 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442888.png
+[2026-01-03 17:51:28] [ORDER 1 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:51:29] [ORDER 1 STDOUT] ✅ Browser closed
+[2026-01-03 17:51:29] [ORDER 1 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442888.png
+[2026-01-03 17:51:31] [ORDER 1 STDOUT] ✅ Saved failed order log to: c:\Users\zgarm\OneDrive\Desktop\Deal share\failed_logs\failed_order_1_20260103_175131.txt
+[2026-01-03 17:51:31] [ORDER 1 STDOUT] 📝 Failure logged to CSV
+[2026-01-03 17:51:31] [INFO] Order 1 completed (FAILED, return_code=1) - 19/19 total
+[2026-01-03 17:51:32] [INFO] All 19 orders completed!
+[2026-01-03 17:51:32] [INFO] Final stats: Success=0, Failure=19
+[2026-01-03 17:51:32] [DEBUG] ========== AUTOMATION WORKER FINISHED ==========

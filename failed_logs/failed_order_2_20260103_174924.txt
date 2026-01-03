@@ -1,0 +1,39 @@
+=== FAILED ORDER LOG ===
+Order Number: 2
+Timestamp: 2026-01-03 17:49:24
+Status: Failed - Failed to get phone number from API
+Screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442761.png
+
+==================================================
+WORKER LOG:
+==================================================
+
+[2026-01-03 17:49:11] [ORDER 2 STDOUT] ⏭️ Location selection step skipped (disabled in settings)
+[2026-01-03 17:49:13] [ORDER 2 STDOUT] 📍 Attempt 1/3
+[2026-01-03 17:49:13] [ORDER 2 STDOUT] 👤 Attempting to click user icon...
+[2026-01-03 17:49:16] [ORDER 2 STDOUT] ✅ Found user icon with selector: div.UserOptions_userContainer__CqX1R
+[2026-01-03 17:49:17] [ORDER 2 STDOUT] ✅ User icon clicked (regular)
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG] ========== API CONFIGURATION ==========
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG] Step 1: Reading environment variables...
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   API_KEY: SET
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   API_KEY (masked): 7189****************************7123 (length: 36)
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   API_URL: https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   COUNTRY: 22
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   OPERATOR: 10
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   SERVICE: lmeh
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG] ========================================
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG] Step 2: API configuration validated successfully
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG] Step 3: Proceeding to request phone number from API...
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] 📱 Requesting phone number from API...
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG] Step 4: Calling get_number() with:
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   service=lmeh
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   country=22
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   operator=10
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   api_key=7189...7123
+[2026-01-03 17:49:18] [ORDER 2 STDOUT] [DEBUG]   base_url=https://api.temporasms.com/stubs/handler_api.php
+[2026-01-03 17:49:21] [ORDER 2 STDOUT] [DEBUG] Step 5: get_number() returned: None
+[2026-01-03 17:49:21] [ORDER 2 STDOUT] ❌ CRITICAL FAILURE: Failed to get phone number from API
+[2026-01-03 17:49:21] [ORDER 2 STDOUT] 📸 Screenshot taken: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442761.png
+[2026-01-03 17:49:21] [ORDER 2 STDOUT] 🛑 Closing browser session...
+[2026-01-03 17:49:22] [ORDER 2 STDOUT] ✅ Browser closed
+[2026-01-03 17:49:22] [ORDER 2 STDOUT] 📸 Saved local screenshot: c:\Users\zgarm\OneDrive\Desktop\Deal share\screenshots\failed_1767442761.png

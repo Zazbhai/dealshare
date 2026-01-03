@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import sys
 import os
@@ -1335,6 +1335,102 @@ def delete_user(user_id):
             "success": False,
             "error": str(e)
         }), 500
+
+
+@app.route('/api/logs/failed', methods=['GET'])
+@require_auth
+def view_failed_log():
+    """View content of a failed log file"""
+    try:
+        filename = request.args.get('filename')
+        if not filename:
+            return jsonify({
+                "success": False,
+                "error": "Filename is required"
+            }), 400
+            
+        # Security: Allow only alphanumeric, underscores, dots, and hyphens
+        # This prevents directory traversal
+        import re
+        if not re.match(r'^[a-zA-Z0-9_.-]+$', filename):
+             return jsonify({
+                "success": False,
+                "error": "Invalid filename format"
+            }), 400
+
+        # Construct path
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        failed_logs_dir = os.path.join(base_dir, 'failed_logs')
+        filepath = os.path.join(failed_logs_dir, filename)
+        
+        print(f"[DEBUG] Looking for log file at: {filepath}")
+        
+        if not os.path.exists(filepath):
+            print(f"[DEBUG] File not found at: {filepath}")
+            return jsonify({
+                "success": False,
+                "error": f"Log file not found at: {filepath}",
+                "debug_base": base_dir
+            }), 404
+            
+        with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
+            content = f.read()
+            
+            
+        return jsonify({
+            "success": True,
+            "filename": filename,
+            "content": content
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/screenshots/view', methods=['GET'])
+@require_auth
+def view_screenshot():
+    """Serve a screenshot file"""
+    try:
+        filename = request.args.get('filename')
+        if not filename:
+            return jsonify({
+                "success": False,
+                "error": "Filename is required"
+            }), 400
+            
+        # Security: Allow only alphanumeric, underscores, dots, and hyphens
+        import re
+        if not re.match(r'^[a-zA-Z0-9_.-]+$', filename):
+             return jsonify({
+                "success": False,
+                "error": "Invalid filename format"
+            }), 400
+
+        # Construct path
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        screenshots_dir = os.path.join(base_dir, 'screenshots')
+        filepath = os.path.join(screenshots_dir, filename)
+        
+        if not os.path.exists(filepath):
+            return jsonify({
+                "success": False,
+                "error": f"Screenshot not found at: {filepath}",
+                "debug_base": base_dir
+            }), 404
+            
+        return send_from_directory(screenshots_dir, filename)
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+# Serve React Frontend (Catch-all route)
 
 if __name__ == '__main__':
     host = os.environ.get('BACKEND_HOST', '0.0.0.0')

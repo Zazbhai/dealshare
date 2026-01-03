@@ -329,6 +329,35 @@ export const getLogsList = async () => {
   }
 }
 
+
+
+export const viewFailedLog = async (filename) => {
+  try {
+    const response = await api.get('/logs/failed', {
+      params: { filename }
+    })
+    return response.data
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    }
+  }
+}
+
+
+export const viewScreenshot = async (filename) => {
+  try {
+    const response = await api.get('/screenshots/view', {
+      params: { filename },
+      responseType: 'blob'
+    })
+    return { success: true, blob: response.data }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
 export const viewLogFile = async (filename) => {
   try {
     const response = await api.get(`/logs/view/${filename}`)

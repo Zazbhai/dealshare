@@ -7,13 +7,13 @@ from datetime import datetime
 from api_dynamic import get_number, get_otp, cancel_number, set_status
 from order_reporter import save_order_to_csv
 # Try to import imgbb uploader
-try:
-    from imgbb_upload import upload_image_to_imgbb
-except ImportError:
-    print("⚠️ imgbb_upload module not found. Screenshot upload will be skipped.")
-    def upload_image_to_imgbb(path): return "UPLOAD_FAILED_MODULE_MISSING"
+# from imgbb_upload import upload_image_to_imgbb (Removed as per request)
 
 
+
+
+SCREENSHOTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'screenshots')
+os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
 
 # =========================
 # HELPERS
@@ -21,27 +21,39 @@ except ImportError:
 
 def fail_and_exit(message, page=None, browser=None):
     """
-    Log failure, save screenshot, upload to Pastebin/CSV, and exit.
+    Log failure, save screenshot, closed browser, upload to Pastebin/CSV, and exit.
     """
     print(f"❌ CRITICAL FAILURE: {message}")
     
     screenshot_url = "N/A"
+    filepath = None
     
+    # 1. Take screenshot first (if page available)
     if page:
         try:
             filename = f"failed_{int(time.time())}.png"
-            page.screenshot(path=filename)
-            print(f"📸 Screenshot taken: {filename}")
-            
-            # Upload
-            uploaded = upload_image_to_imgbb(filename)
-            if uploaded and not uploaded.startswith("UPLOAD_FAILED"):
-                screenshot_url = uploaded
-                print(f"☁️ Uploaded screenshot: {uploaded}")
+            filepath = os.path.join(SCREENSHOTS_DIR, filename)
+            page.screenshot(path=filepath)
+            print(f"📸 Screenshot taken: {filepath}")
         except Exception as e:
-            print(f"⚠️ Screenshot/Upload failed: {e}")
+            print(f"⚠️ Screenshot failed: {e}")
+            filepath = None
 
-    # Save to CSV
+    # 2. Close browser IMMEDIATELY
+    if browser:
+        print("🛑 Closing browser session...")
+        try:
+            browser.close()
+            print("✅ Browser closed")
+        except:
+            pass
+
+    # 3. Use local screenshot path
+    if filepath and os.path.exists(filepath):
+        screenshot_url = filepath
+        print(f"📸 Saved local screenshot: {filepath}")
+
+    # 4. Save to CSV/Pastebin
     try:
         # Get order number and log path from env
         order_num = os.environ.get('ORDER_NUMBER', 'Unknown')
@@ -61,12 +73,6 @@ def fail_and_exit(message, page=None, browser=None):
         print("📝 Failure logged to CSV")
     except Exception as e:
         print(f"⚠️ Failed to log failure to CSV: {e}")
-
-    if browser:
-        try:
-            browser.close()
-        except:
-            pass
             
     sys.exit(1)
 
@@ -1418,9 +1424,11 @@ def main():
                 
                 # Take screenshot immediately regardless of outcome
                 screenshot_filename = f"order_result_{int(time.time())}.png"
+                screenshot_path = None
                 try:
-                    page.screenshot(path=screenshot_filename)
-                    print(f"📸 Screenshot taken: {screenshot_filename}")
+                    screenshot_path = os.path.join(SCREENSHOTS_DIR, screenshot_filename)
+                    page.screenshot(path=screenshot_path)
+                    print(f"📸 Screenshot taken: {screenshot_path}")
                 except Exception as e:
                     print(f"⚠️ Failed to take screenshot: {e}")
                     screenshot_filename = None
@@ -1440,17 +1448,11 @@ def main():
                 # Determine status
                 status = "Success" if not error_found else f"Failed - {error_reason}"
                 
-                # Upload and Log
+                # Local Screenshot
                 screenshot_url = "N/A"
-                if screenshot_filename:
-                    print("☁️ Uploading screenshot to ImgBB...")
-                    uploaded_url = upload_image_to_imgbb(screenshot_filename)
-                    if uploaded_url:
-                        screenshot_url = uploaded_url
-                        print(f"✅ Screenshot uploaded: {screenshot_url}")
-                    else:
-                        print("⚠️ Screenshot upload failed")
-                        screenshot_url = "UPLOAD_FAILED"
+                if screenshot_filename and screenshot_path and os.path.exists(screenshot_path):
+                    screenshot_url = screenshot_path
+                    print(f"📸 Saved local screenshot: {screenshot_path}")
                 
                 # Log to CSV
                 try:

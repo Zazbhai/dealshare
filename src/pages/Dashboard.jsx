@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Play, Square, TrendingUp, Zap, Activity, FileText, User, Home, MapPin, Bug, Download, Eye, RefreshCw, AlertCircle, X, Edit2, Save, Link2, ChevronDown, Navigation2, ToggleLeft, ToggleRight, ShoppingCart, Plus, Trash2 } from 'lucide-react'
-import { getBalance, getGlobalSettings, startAutomation, stopAutomation, getAutomationStatus, getOrdersReport, downloadOrdersReport, getLogsList, viewLogFile, downloadLogFile } from '../services/api'
+import { getBalance, getGlobalSettings, startAutomation, stopAutomation, getAutomationStatus, getOrdersReport, downloadOrdersReport, getLogsList, viewLogFile, downloadLogFile, viewFailedLog, viewScreenshot } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { updateSettings } from '../services/auth'
 import ConnectionDebugger from '../components/ConnectionDebugger'
@@ -34,6 +34,8 @@ function Dashboard() {
   const [logFiles, setLogFiles] = useState([])
   const [selectedLogContent, setSelectedLogContent] = useState(null)
   const [selectedLogFilename, setSelectedLogFilename] = useState(null)
+  const [selectedImageUrl, setSelectedImageUrl] = useState(null)
+  const [selectedImageName, setSelectedImageName] = useState(null)
   const [showCompletionModal, setShowCompletionModal] = useState(false)
   const [showCapacityErrorModal, setShowCapacityErrorModal] = useState(false)
   const [showAllProductsFailedModal, setShowAllProductsFailedModal] = useState(false)
@@ -524,6 +526,51 @@ function Dashboard() {
       }
     } catch (error) {
       addLog('error', `Error downloading log: ${error.message}`)
+    }
+  }
+
+  const handleViewScreenshot = async (pathOrUrl) => {
+    console.log("Viewing screenshot:", pathOrUrl)
+    if (!pathOrUrl || pathOrUrl === 'N/A') return
+
+    if (pathOrUrl.startsWith('http')) {
+      window.open(pathOrUrl, '_blank')
+    } else {
+      const filename = pathOrUrl.split(/[/\\]/).pop()
+      const result = await viewScreenshot(filename)
+      if (result.success) {
+        const url = URL.createObjectURL(result.blob)
+        setSelectedImageUrl(url)
+        setSelectedImageName(filename)
+      } else {
+        addLog('error', `Failed to view screenshot: ${result.error}`)
+      }
+    }
+  }
+
+  const handleViewOrderLog = async (pathOrUrl) => {
+    if (!pathOrUrl) return
+
+    try {
+      if (pathOrUrl.startsWith('http')) {
+        // Legacy Pastebin URL
+        window.open(pathOrUrl, '_blank')
+      } else {
+        // Local file path - extract filename
+        // Handle both Windows (\) and Unix (/) paths
+        const filename = pathOrUrl.split(/[/\\]/).pop()
+
+        // Show loading state or similar if needed
+        const result = await viewFailedLog(filename)
+        if (result.success) {
+          setSelectedLogContent(result.content)
+          setSelectedLogFilename(filename)
+        } else {
+          addLog('error', `Failed to view failed log: ${result.error}`)
+        }
+      }
+    } catch (error) {
+      addLog('error', `Error opening log: ${error.message}`)
     }
   }
 
@@ -1662,15 +1709,13 @@ function Dashboard() {
                           <td className="p-3 text-gray-300">{order.timestamp}</td>
                           <td className="p-3">
                             {order.screenshot_url && order.screenshot_url !== 'N/A' ? (
-                              <a
-                                href={order.screenshot_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                onClick={() => handleViewScreenshot(order.screenshot_url)}
                                 className="text-blue-400 hover:text-blue-300 underline flex items-center gap-1"
                               >
                                 <Eye className="w-4 h-4" />
                                 View
-                              </a>
+                              </button>
                             ) : (
                               <span className="text-gray-500">No screenshot</span>
                             )}
@@ -1725,15 +1770,13 @@ function Dashboard() {
                           <td className="p-3 text-gray-300">{order.timestamp}</td>
                           <td className="p-3">
                             {order.screenshot_url && order.screenshot_url !== 'N/A' ? (
-                              <a
-                                href={order.screenshot_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                onClick={() => handleViewScreenshot(order.screenshot_url)}
                                 className="text-blue-400 hover:text-blue-300 underline flex items-center gap-1"
                               >
                                 <Eye className="w-4 h-4" />
                                 View
-                              </a>
+                              </button>
                             ) : (
                               <span className="text-gray-500">No screenshot</span>
                             )}
@@ -1745,15 +1788,13 @@ function Dashboard() {
                           </td>
                           <td className="p-3">
                             {order.pastebin_url ? (
-                              <a
-                                href={order.pastebin_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                onClick={() => handleViewOrderLog(order.pastebin_url)}
                                 className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 rounded transition-colors text-sm w-fit"
                               >
                                 <FileText className="w-4 h-4" />
                                 View Log
-                              </a>
+                              </button>
                             ) : (
                               <span className="text-gray-500 text-sm">No log available</span>
                             )}
@@ -1826,32 +1867,10 @@ function Dashboard() {
               )}
             </div>
 
-            {/* Log Viewer Modal */}
-            {selectedLogContent && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-purple-500/20 shadow-2xl"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold">{selectedLogFilename}</h3>
-                  <button
-                    onClick={() => {
-                      setSelectedLogContent(null)
-                      setSelectedLogFilename(null)
-                    }}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
-                <div className="bg-black/40 rounded-lg p-4 h-96 overflow-y-auto font-mono text-xs text-gray-300 whitespace-pre-wrap">
-                  {selectedLogContent}
-                </div>
-              </motion.div>
-            )}
+            {/* Log Viewer Modal removed from here and moved to end */}
           </motion.div>
         )}
+
 
         {/* Floating Particles Effect */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -1877,6 +1896,63 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* Global Log Viewer Modal */}
+      {
+        selectedLogContent && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedLogContent(null)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-gradient-to-br from-gray-800 to-gray-900 backdrop-blur-xl rounded-xl p-6 border border-purple-500/20 shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-white">{selectedLogFilename}</h3>
+                <button
+                  onClick={() => {
+                    setSelectedLogContent(null)
+                    setSelectedLogFilename(null)
+                  }}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-white"
+                >
+                  Close
+                </button>
+              </div>
+              <div className="bg-black/40 rounded-lg p-4 flex-1 overflow-y-auto font-mono text-xs sm:text-sm text-gray-300 whitespace-pre-wrap">
+                {selectedLogContent}
+              </div>
+            </motion.div>
+          </div>
+        )
+      }
+
+      {/* Image Viewer Modal */}
+      {selectedImageUrl && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => {
+          URL.revokeObjectURL(selectedImageUrl)
+          setSelectedImageUrl(null)
+        }}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-6xl w-full max-h-[90vh] flex flex-col items-center"
+          >
+            <button
+              onClick={() => {
+                URL.revokeObjectURL(selectedImageUrl)
+                setSelectedImageUrl(null)
+              }}
+              className="absolute -top-10 right-0 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-white"
+            >
+              Close
+            </button>
+            <img src={selectedImageUrl} alt={selectedImageName} className="max-w-full max-h-[85vh] rounded-lg shadow-2xl border border-gray-700" />
+            <p className="mt-2 text-gray-400">{selectedImageName}</p>
+          </motion.div>
+        </div>
+      )}
+
       {/* Hidden audio elements for sound effects */}
       <audio ref={startSoundRef} preload="auto">
         <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg" />
@@ -1884,7 +1960,7 @@ function Dashboard() {
       <audio ref={completionSoundRef} preload="auto">
         <source src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" type="audio/mpeg" />
       </audio>
-    </div>
+    </div >
   )
 }
 

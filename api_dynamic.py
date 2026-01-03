@@ -30,43 +30,57 @@ def _http_get(params: Dict[str, Any], api_key: str, base_url: str) -> str:
     
     merged = {"api_key": api_key, **params}
     url = f"{base_url}?{parse.urlencode(merged)}"
-    # #region agent log
-    try:
-        url_masked = url.split('api_key=')[0] + 'api_key=' + api_key_masked if 'api_key=' in url else url
-        with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
-            f.write(json.dumps({"location":"api_dynamic.py:16","message":"URL constructed","data":{"url_masked":url_masked},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"D"})+"\n")
-    except: pass
-    # #endregion
     
-
-    try:
-        with request.urlopen(url, timeout=45) as resp:
-            # API returns plain text like: ACCESS_BALANCE:123.45
-            response = resp.read().decode("utf-8").strip()
-            # #region agent log
+    # Retry configuration
+    max_retries = 3
+    last_exception = None
+    
+    for attempt in range(max_retries):
+        try:
+            # Add basic logging of attempts if it's a retry
+            if attempt > 0:
+                print(f"[DEBUG] API Retry attempt {attempt+1}/{max_retries} for URL: {url.split('?')[0]}...")
+                
+            with request.urlopen(url, timeout=45) as resp:
+                # API returns plain text like: ACCESS_BALANCE:123.45
+                response = resp.read().decode("utf-8").strip()
+                return response
+                
+        except (error.HTTPError, error.URLError, ConnectionResetError) as exc:
+            last_exception = exc
+            # Check for RemoteDisconnected which can be wrapped in URLError
+            is_remote_disconnected = False
             try:
-                with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                    f.write(json.dumps({"location":"api_dynamic.py:21","message":"_http_get success","data":{"status_code":resp.status,"response_length":len(response),"response_preview":response[:50]},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"E"})+"\n")
-            except: pass
-            # #endregion
-            return response
-    except error.HTTPError as exc:
-        # #region agent log
-        try:
-            with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"location":"api_dynamic.py:23","message":"_http_get HTTPError","data":{"status_code":exc.code,"reason":exc.reason},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"E"})+"\n")
-        except: pass
-        # #endregion
-        error_body = exc.read().decode('utf-8') if hasattr(exc, 'read') else 'N/A'
-        raise ValueError(f"API HTTP {exc.code}: {exc.reason}") from exc
-    except error.URLError as exc:
-        # #region agent log
-        try:
-            with open(r'c:\Users\zgarm\OneDrive\Desktop\Deal share\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                f.write(json.dumps({"location":"api_dynamic.py:25","message":"_http_get URLError","data":{"reason":str(exc.reason)},"timestamp":int(__import__('time').time()*1000),"sessionId":"debug-session","runId":"run1","hypothesisId":"E"})+"\n")
-        except: pass
-        # #endregion
-        raise ValueError(f"Network error: {exc.reason}") from exc
+                import http.client
+                if isinstance(exc, http.client.RemoteDisconnected):
+                    is_remote_disconnected = True
+                elif hasattr(exc, 'reason') and isinstance(exc.reason, http.client.RemoteDisconnected):
+                    is_remote_disconnected = True
+            except:
+                pass
+
+            # Only retry on network-related errors, not necessarily 4xx/5xx HTTP errors if they are definitive
+            # specific logic: retry on RemoteDisconnected, ConnectionReset, and generic URLErrors (timeouts etc)
+            should_retry = True
+            if isinstance(exc, error.HTTPError):
+                # Don't retry on 401/403 (auth errors) directly? 
+                # Actually, sometimes proxies fail with 403 momentarily. 
+                # But typically 4xx are client errors.
+                if exc.code in [401, 403, 400, 404]:
+                    should_retry = False
+            
+            if should_retry and attempt < max_retries - 1:
+                sleep_time = 2 * (attempt + 1)
+                time.sleep(sleep_time)
+                continue
+            
+            if not should_retry:
+                # Re-raise immediately if it's a non-retriable error
+                error_body = exc.read().decode('utf-8') if hasattr(exc, 'read') else 'N/A'
+                raise ValueError(f"API HTTP {exc.code}: {exc.reason}") from exc
+
+    # If we get here, we exhausted retries
+    raise ValueError(f"Network error after {max_retries} attempts: {last_exception}")
 
 
 def get_balance(api_key: str, base_url: str) -> str:
