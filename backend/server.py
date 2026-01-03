@@ -306,6 +306,86 @@ def health():
     status_code = 200 if health_status["database"] == "connected" else 503
     return jsonify(health_status), status_code
 
+@app.route('/api/orders/report', methods=['GET'])
+@require_auth
+def get_orders_report():
+    """Get orders report with success/failed separation"""
+    try:
+        import csv
+        csv_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'my_orders.csv')
+        
+        if not os.path.exists(csv_file):
+            return jsonify({
+                "success": True,
+                "orders": {
+                    "success": [],
+                    "failed": []
+                }
+            })
+        
+        success_orders = []
+        failed_orders = []
+        
+        with open(csv_file, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                order_data = {
+                    "timestamp": row.get('timestamp', ''),
+                    "screenshot_url": row.get('screenshot_url', ''),
+                    "status": row.get('status', ''),
+                    "pastebin_url": row.get('pastebin_url', '')
+                }
+                
+                # Categorize based on status
+                if order_data['status'] == 'success':
+                    success_orders.append(order_data)
+                else:
+                    failed_orders.append(order_data)
+        
+        return jsonify({
+            "success": True,
+            "orders": {
+                "success": success_orders,
+                "failed": failed_orders
+            },
+            "total": {
+                "success": len(success_orders),
+                "failed": len(failed_orders)
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/orders/download', methods=['GET'])
+@require_auth
+def download_orders():
+    """Download orders CSV file"""
+    try:
+        csv_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'my_orders.csv')
+        
+        if not os.path.exists(csv_file):
+            return jsonify({
+                "success": False,
+                "error": "No orders file found"
+            }), 404
+        
+        return send_file(
+            csv_file,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name='my_orders.csv'
+        )
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
 # ==================== PROTECTED API ENDPOINTS ====================
 
 def get_user_api_config():
@@ -500,70 +580,7 @@ def prices():
             "error": str(e)
         }), 500
 
-@app.route('/api/reports/orders', methods=['GET'])
-@require_auth
-def get_orders_report():
-    """Get orders report from CSV file"""
-    try:
-        import csv
-        import os
-        csv_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'my_orders.csv')
-        
-        if not os.path.exists(csv_file):
-            return jsonify({
-                "success": True,
-                "orders": []
-            })
-        
-        orders = []
-        with open(csv_file, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                orders.append(row)
-        
-        # Reverse to show latest first
-        orders.reverse()
-        
-        return jsonify({
-            "success": True,
-            "orders": orders
-        })
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
 
-@app.route('/api/reports/orders/download', methods=['GET'])
-@require_auth
-def download_orders_report():
-    """Download orders report CSV file"""
-    try:
-        import os
-        from flask import send_file
-        csv_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'my_orders.csv')
-        
-        if not os.path.exists(csv_file):
-            return jsonify({
-                "success": False,
-                "error": "No orders report found"
-            }), 404
-        
-        return send_file(
-            csv_file,
-            mimetype='text/csv',
-            as_attachment=True,
-            download_name='my_orders.csv'
-        )
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
 
 @app.route('/api/logs/list', methods=['GET'])
 @require_auth

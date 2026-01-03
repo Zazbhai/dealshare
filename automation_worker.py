@@ -60,6 +60,9 @@ def run_single_order(order_num):
     
     env = os.environ.copy()  # This already contains API_KEY, API_URL, etc. from server.py
     env['ORDER_NUMBER'] = str(order_num)
+    # Pass log file path to worker so it can be uploaded on failure
+    worker_log_file = os.path.join(logs_dir, f'worker_{order_num}.log')
+    env['WORKER_LOG_PATH'] = worker_log_file
     # Set UTF-8 encoding for Windows to handle emojis
     if sys.platform == 'win32':
         env['PYTHONIOENCODING'] = 'utf-8'

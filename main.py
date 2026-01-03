@@ -5,6 +5,7 @@ import sys
 import csv
 from datetime import datetime
 from api_dynamic import get_number, get_otp, cancel_number, set_status
+from order_reporter import save_order_to_csv
 # Try to import imgbb uploader
 try:
     from imgbb_upload import upload_image_to_imgbb
@@ -17,6 +18,58 @@ except ImportError:
 # =========================
 # HELPERS
 # =========================
+
+def fail_and_exit(message, page=None, browser=None):
+    """
+    Log failure, save screenshot, upload to Pastebin/CSV, and exit.
+    """
+    print(f"❌ CRITICAL FAILURE: {message}")
+    
+    screenshot_url = "N/A"
+    
+    if page:
+        try:
+            filename = f"failed_{int(time.time())}.png"
+            page.screenshot(path=filename)
+            print(f"📸 Screenshot taken: {filename}")
+            
+            # Upload
+            uploaded = upload_image_to_imgbb(filename)
+            if uploaded and not uploaded.startswith("UPLOAD_FAILED"):
+                screenshot_url = uploaded
+                print(f"☁️ Uploaded screenshot: {uploaded}")
+        except Exception as e:
+            print(f"⚠️ Screenshot/Upload failed: {e}")
+
+    # Save to CSV
+    try:
+        # Get order number and log path from env
+        order_num = os.environ.get('ORDER_NUMBER', 'Unknown')
+        worker_log_path = os.environ.get('WORKER_LOG_PATH')
+        
+        # IMPORTANT: Wait a bit for the parent process (automation_worker.py) to capture 
+        # the latest stdout logs (including the CRITICAL FAILURE message above) 
+        # and write them to the log file before we try to read it.
+        time.sleep(2) 
+        
+        save_order_to_csv(
+            screenshot_url=screenshot_url,
+            status=f"Failed - {message}",
+            worker_log_path=worker_log_path,
+            order_number=order_num
+        )
+        print("📝 Failure logged to CSV")
+    except Exception as e:
+        print(f"⚠️ Failed to log failure to CSV: {e}")
+
+    if browser:
+        try:
+            browser.close()
+        except:
+            pass
+            
+    sys.exit(1)
+
 def js_click(page, locator):
     if locator.count() == 0:
         return False
@@ -824,7 +877,7 @@ def main():
             
             browser = p.chromium.launch(
                 headless=False,  # Run in visible mode for local development
-                slow_mo=0,  # No delay for better performance
+                slow_mo=100,  # No delay for better performance
                 args=browser_args
             )
         except Exception as e:
@@ -903,22 +956,17 @@ def main():
             # Show masked version for security
             masked_key = api_key[:4] + '*' * (len(api_key) - 8) + api_key[-4:] if len(api_key) > 8 else '****'
             print(f"[DEBUG]   API_KEY (masked): {masked_key} (length: {len(api_key)})")
-        print(f"[DEBUG]   API_URL: {api_url}")
-        print(f"[DEBUG]   COUNTRY: {country}")
-        print(f"[DEBUG]   OPERATOR: {operator}")
-        print(f"[DEBUG]   SERVICE: {service}")
-        print(f"[DEBUG] ========================================")
-        
+            print(f"[DEBUG]   API_URL: {api_url}")
+            print(f"[DEBUG]   COUNTRY: {country}")
+            print(f"[DEBUG]   OPERATOR: {operator}")
+            print(f"[DEBUG]   SERVICE: {service}")
+            print(f"[DEBUG] ========================================")
+            
         if not api_key:
-            print("❌ API_KEY not found in environment variables")
-            print(f"[DEBUG] Available environment variables with 'API': {[k for k in os.environ.keys() if 'API' in k]}")
-            browser.close()
-            sys.exit(1)  # Exit with failure code
+            fail_and_exit("API_KEY not found in environment variables", page, browser)
         
         if not api_url:
-            print("❌ API_URL not found in environment variables")
-            browser.close()
-            sys.exit(1)  # Exit with failure code
+            fail_and_exit("API_URL not found in environment variables", page, browser)
         
         print(f"[DEBUG] Step 2: API configuration validated successfully")
         print(f"[DEBUG] Step 3: Proceeding to request phone number from API...")
@@ -940,18 +988,19 @@ def main():
         )
         print(f"[DEBUG] Step 5: get_number() returned: {number_result}")
         if not number_result:
-            print("❌ Failed to get phone number from API")
-            browser.close()
-            sys.exit(1)  # Exit with failure code
+            fail_and_exit("Failed to get phone number from API", page, browser)
         
         request_id, phone_number = number_result
         print(f"✅ Got phone number: {phone_number} (request_id: {request_id})")
         
         # Enter phone number
-        phone_input = page.locator("input[placeholder='Ex 9876543210']")
-        phone_input.wait_for()
-        phone_input.fill(phone_number)
-        phone_input.press("Enter")
+        try:
+            phone_input = page.locator("input[placeholder='Ex 9876543210']")
+            phone_input.wait_for()
+            phone_input.fill(phone_number)
+            phone_input.press("Enter")
+        except Exception as e:
+            fail_and_exit(f"Failed to enter phone number: {e}", page, browser)
 
         # Wait a bit for OTP to be sent
         print("⏳ Waiting for OTP (max 2 minutes)...")
@@ -963,15 +1012,13 @@ def main():
             api_key=api_key,
             base_url=api_url,
             timeout_seconds=120.0,
-            poll_interval=2.0
+            poll_interval=1.0
         )
         
         if not otp:
             print("❌ Failed to get OTP within 2 minutes. Cancelling number...")
             cancel_number(request_id, api_key, api_url)
-            print("❌ Number cancelled due to OTP timeout")
-            browser.close()
-            sys.exit(1)  # Exit immideatly with failure code
+            fail_and_exit("Number cancelled due to OTP timeout", page, browser)
         
         # OTP received - enter it
         print(f"✅ Got OTP: {otp}")
@@ -1089,14 +1136,12 @@ def main():
                 product_urls.append(third_product_url)
                 product_quantities.append(third_product_quantity)
         
-        # Validate at least one product URL
         if len(product_urls) == 0:
-            print("❌ At least one product URL is required but not configured")
-            browser.close()
-            sys.exit(1)  # Exit with generic error code
+            fail_and_exit("At least one product URL is required but not configured", page, browser)
         
         print(f"📋 Found {len(product_urls)} product URLs to try")
         print(f"🔢 Quantities: {product_quantities}")
+
         
         # Check if ORDER_ALL mode is enabled
         order_all = os.environ.get('ORDER_ALL', '0') == '1'
@@ -1130,17 +1175,13 @@ def main():
         
         if not all_added:
             print("❌ Failed to add all products - Closing windows")
-            page.screenshot(path="all_products_failed.png")
-            browser.close()
-            sys.exit(5)  # SPECIAL EXIT CODE 5 -> SIGNALS WORKER MANAGER TO STOP ALL WORKERS
+            fail_and_exit("Failed to add all products", page, browser)
         
         # After adding all products, open bag and check for errors
         print("✅ All products added. Opening bag and checking for errors...")
         if not check_cart_for_errors(page, request_id, api_key, api_url):
             print("⚠️ Cart check found errors (remove_text_options detected) - Closing windows")
-            page.screenshot(path="cart_errors_found.png")
-            browser.close()
-            sys.exit(5)  # Exit with code 5 to signal worker manager to stop
+            fail_and_exit("Cart check found errors (Delivery not available)", page, browser)
         
         print("✅ Cart check passed - ready to proceed")
         
@@ -1168,9 +1209,7 @@ def main():
         print(f"[DEBUG]   Landmark: {automation_landmark}")
         
         if not automation_name or not automation_house_flat or not automation_landmark:
-            print("❌ Order details (name, house/flat, landmark) are required but not configured")
-            browser.close()
-            sys.exit(1)
+            fail_and_exit("Order details (name, house/flat, landmark) are required but not configured", page, browser)
         
         # Wait for form to be visible
         page.wait_for_selector("input[name='userName']", state="visible", timeout=10000)
@@ -1209,8 +1248,7 @@ def main():
             print("✅ Address saved successfully")
         else:
             print("❌ Failed to save address")
-            page.screenshot(path="address_save_failed.png")
-            raise Exception("Could not save address")
+            fail_and_exit("Could not save address", page, browser)
         
         time.sleep(3)
 
@@ -1218,20 +1256,87 @@ def main():
         # PAYMENT
         # -----------------------------
         print("💳 Selecting payment method...")
-        
+
         # Wait for payment options to load
         page.wait_for_selector("div.Payment_methodItem__BLz7I", timeout=10000)
-        time.sleep(1)
-        
-        # Click Cash on Delivery
-        cod_option = page.locator(
-            "div.Payment_methodItem__BLz7I",
-            has_text="Cash on Delivery"
-        ).first
-        
-        cod_option.scroll_into_view_if_needed()
-        cod_option.click(force=True)
-        print("✅ COD selected")
+        time.sleep(2)  # Increased wait for payment UI to fully load
+
+        # Try multiple methods to select COD
+        cod_selected = False
+
+        # Method 1: Find by class and text
+        try:
+            cod_option = page.locator(
+                "div.Payment_methodItem__BLz7I",
+                has_text="Cash on Delivery"
+            ).first
+            
+            if cod_option.count() > 0:
+                cod_option.scroll_into_view_if_needed()
+                time.sleep(0.5)
+                
+                if robust_click(page, cod_option, method="locator"):
+                    print("✅ COD selected (Method 1: class + text)")
+                    cod_selected = True
+        except Exception as e:
+            print(f"⚠️ Method 1 failed: {e}")
+
+        # Method 2: Find by text only
+        if not cod_selected:
+            try:
+                cod_text = page.locator("text=Cash on Delivery").first
+                if cod_text.count() > 0:
+                    cod_text.scroll_into_view_if_needed()
+                    time.sleep(0.5)
+                    
+                    if robust_click(page, cod_text, method="locator"):
+                        print("✅ COD selected (Method 2: text only)")
+                        cod_selected = True
+            except Exception as e:
+                print(f"⚠️ Method 2 failed: {e}")
+
+        # Method 3: Find parent container and click
+        if not cod_selected:
+            try:
+                cod_containers = page.locator("div.Payment_methodItem__BLz7I")
+                for i in range(cod_containers.count()):
+                    container = cod_containers.nth(i)
+                    text_content = container.text_content()
+                    if "Cash on Delivery" in text_content or "COD" in text_content:
+                        container.scroll_into_view_if_needed()
+                        time.sleep(0.5)
+                        
+                        if robust_click(page, container, method="locator"):
+                            print("✅ COD selected (Method 3: container iteration)")
+                            cod_selected = True
+                            break
+            except Exception as e:
+                print(f"⚠️ Method 3 failed: {e}")
+
+        # Method 4: JS click on any element containing COD text
+        if not cod_selected:
+            try:
+                page.evaluate("""
+                    () => {
+                        const elements = Array.from(document.querySelectorAll('*'));
+                        const codElement = elements.find(el => 
+                            el.textContent.includes('Cash on Delivery') || 
+                            el.textContent.includes('COD')
+                        );
+                        if (codElement) {
+                            codElement.click();
+                            return true;
+                        }
+                        return false;
+                    }
+                """)
+                print("✅ COD selected (Method 4: JS search)")
+                cod_selected = True
+            except Exception as e:
+                print(f"⚠️ Method 4 failed: {e}")
+
+        if not cod_selected:
+            fail_and_exit("Could not select Cash on Delivery", page, browser)
         time.sleep(2)
 
         print("📦 Attempting to place order...")
@@ -1369,23 +1474,15 @@ def main():
                     sys.exit(0) # SUCCESS EXIT
                 else:
                     print("❌ Order failed due to post-click error")
-                    browser.close()
-                    sys.exit(1) # FAIL EXIT
+                    fail_and_exit("Order failed due to post-click error", page, browser)
             
             else:
-                print("❌ All click methods failed!")
-                page.screenshot(path="place_order_failed.png")
-                browser.close()
-                sys.exit(1)
+                fail_and_exit("All click methods failed!", page, browser)
         else:
-            print("❌ Could not find place order button!")
-            page.screenshot(path="button_not_found.png")
-            browser.close()
-            sys.exit(1)
+            fail_and_exit("Could not find place order button!", page, browser)
         
         # This should never be reached, but just in case
-        browser.close()
-        sys.exit(1)
+        fail_and_exit("Unknown error (end of script reached unexpectedly)", page, browser)
 
 
 if __name__ == "__main__":

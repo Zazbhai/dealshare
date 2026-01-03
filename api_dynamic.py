@@ -40,7 +40,7 @@ def _http_get(params: Dict[str, Any], api_key: str, base_url: str) -> str:
     
 
     try:
-        with request.urlopen(url, timeout=15) as resp:
+        with request.urlopen(url, timeout=45) as resp:
             # API returns plain text like: ACCESS_BALANCE:123.45
             response = resp.read().decode("utf-8").strip()
             # #region agent log

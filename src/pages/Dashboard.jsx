@@ -29,7 +29,8 @@ function Dashboard() {
   })
   const logsEndRef = useRef(null)
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [orders, setOrders] = useState([])
+  const [orders, setOrders] = useState({ success: [], failed: [] })
+  const [orderStats, setOrderStats] = useState({ success: 0, failed: 0 })
   const [logFiles, setLogFiles] = useState([])
   const [selectedLogContent, setSelectedLogContent] = useState(null)
   const [selectedLogFilename, setSelectedLogFilename] = useState(null)
@@ -45,12 +46,33 @@ function Dashboard() {
   const [isProductLinksOpen, setIsProductLinksOpen] = useState(false) // Track product links dropdown state
   const [isLocationSettingsOpen, setIsLocationSettingsOpen] = useState(false) // Track location settings dropdown state
 
+  // Audio refs for sound effects
+  const startSoundRef = useRef(null)
+  const completionSoundRef = useRef(null)
+
+  // Play sound utility
+  const playSound = (soundRef) => {
+    if (soundRef.current) {
+      soundRef.current.currentTime = 0
+      soundRef.current.play().catch(err => console.log('Audio play failed:', err))
+    }
+  }
+
   useEffect(() => {
     loadInitialData()
     loadAllDashboardSettings()
     // Check initial automation status to sync state
     checkInitialStatus()
   }, [user])
+
+  // Load orders when Reports tab is selected
+  useEffect(() => {
+    if (activeTab === 'reports') {
+      loadOrdersReport()
+    } else if (activeTab === 'logs') {
+      loadLogsList()
+    }
+  }, [activeTab])
 
   const loadAllDashboardSettings = () => {
     // Load from localStorage first (if available)
@@ -368,6 +390,8 @@ function Dashboard() {
 
       if (result.success) {
         addLog('success', '✅ Automation started successfully')
+        // Play start sound
+        playSound(startSoundRef)
         // Only set running state after backend confirms success
         setIsRunning(true)
         setHasStarted(true)
@@ -432,7 +456,14 @@ function Dashboard() {
     try {
       const result = await getOrdersReport()
       if (result.success) {
-        setOrders(result.orders || [])
+        setOrders({
+          success: result.orders?.success || [],
+          failed: result.orders?.failed || []
+        })
+        setOrderStats({
+          success: result.total?.success || 0,
+          failed: result.total?.failed || 0
+        })
       } else {
         addLog('error', `Failed to load orders: ${result.error}`)
       }
@@ -440,6 +471,21 @@ function Dashboard() {
       addLog('error', `Error loading orders: ${error.message}`)
     }
   }
+
+  const handleDownloadOrders = async () => {
+    try {
+      const result = await downloadOrdersReport()
+      if (result.success) {
+        addLog('success', '✅ Orders report downloaded successfully')
+      } else {
+        addLog('error', `Failed to download orders: ${result.error}`)
+      }
+    } catch (error) {
+      addLog('error', `Error downloading orders: ${error.message}`)
+    }
+  }
+
+
 
   const loadLogsList = async () => {
     try {
@@ -481,18 +527,7 @@ function Dashboard() {
     }
   }
 
-  const handleDownloadOrders = async () => {
-    try {
-      const result = await downloadOrdersReport()
-      if (result.success) {
-        addLog('success', 'Orders report downloaded')
-      } else {
-        addLog('error', `Failed to download: ${result.error}`)
-      }
-    } catch (error) {
-      addLog('error', `Error downloading report: ${error.message}`)
-    }
-  }
+
 
   useEffect(() => {
     if (activeTab === 'reports') {
@@ -550,6 +585,8 @@ function Dashboard() {
             // Use setTimeout to ensure state updates before showing modal
             setTimeout(() => {
               setShowCompletionModal(true)
+              // Play completion sound
+              playSound(completionSoundRef)
             }, 300)
             addLog('success', `✅ Automation completed! Success: ${successCount}, Failure: ${failureCount}`)
           } else if (backendIsRunning && !isRunning && hasStarted) {
@@ -1561,61 +1598,173 @@ function Dashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-purple-500/20 shadow-2xl"
+            className="space-y-6"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-2 sm:p-3 bg-purple-500/20 rounded-lg">
-                  <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-green-900/50 to-emerald-900/50 backdrop-blur-xl rounded-xl p-6 border border-green-500/20 shadow-2xl">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-3 bg-green-500/20 rounded-lg">
+                    <TrendingUp className="w-6 h-6 text-green-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Successful Orders</h3>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-bold">Orders Report</h2>
+                <p className="text-4xl font-bold text-green-400">{orderStats.success}</p>
               </div>
-              <button
-                onClick={handleDownloadOrders}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                Download CSV
-              </button>
+
+              <div className="bg-gradient-to-br from-red-900/50 to-pink-900/50 backdrop-blur-xl rounded-xl p-6 border border-red-500/20 shadow-2xl">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-3 bg-red-500/20 rounded-lg">
+                    <AlertCircle className="w-6 h-6 text-red-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Failed Orders</h3>
+                </div>
+                <p className="text-4xl font-bold text-red-400">{orderStats.failed}</p>
+              </div>
             </div>
 
-            {orders.length === 0 ? (
-              <div className="text-gray-500 text-center py-8">No orders found. Start automation to generate reports.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-purple-500/20">
-                      <th className="pb-2 text-sm font-semibold text-gray-300">Timestamp</th>
-                      <th className="pb-2 text-sm font-semibold text-gray-300">Screenshot</th>
-                      <th className="pb-2 text-sm font-semibold text-gray-300">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map((order, index) => (
-                      <tr key={index} className="border-b border-purple-500/10">
-                        <td className="py-3 text-sm text-gray-400">{order.timestamp || '-'}</td>
-                        <td className="py-3 text-sm">
-                          {order.screenshot_url ? (
-                            <a href={order.screenshot_url} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">
-                              View Screenshot
-                            </a>
-                          ) : (
-                            <span className="text-gray-500">No screenshot</span>
-                          )}
-                        </td>
-                        <td className="py-3 text-sm">
-                          <span className={`px-2 py-1 rounded ${order.status === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                            }`}>
-                            {order.status || '-'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {/* Success Orders Section */}
+            <div className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-green-500/20 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-2 sm:p-3 bg-green-500/20 rounded-lg">
+                    <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-400" />
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white">Successful Orders</h2>
+                </div>
+                <button
+                  onClick={() => {
+                    loadOrdersReport()
+                    handleDownloadOrders()
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  Download CSV
+                </button>
               </div>
-            )}
+
+              {orders.success.length === 0 ? (
+                <div className="text-gray-400 text-center py-8">No successful orders yet.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-green-500/20">
+                        <th className="text-left p-3 text-green-400">Timestamp</th>
+                        <th className="text-left p-3 text-green-400">Screenshot</th>
+                        <th className="text-left p-3 text-green-400">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.success.map((order, index) => (
+                        <tr key={index} className="border-b border-green-500/10 hover:bg-green-500/5">
+                          <td className="p-3 text-gray-300">{order.timestamp}</td>
+                          <td className="p-3">
+                            {order.screenshot_url && order.screenshot_url !== 'N/A' ? (
+                              <a
+                                href={order.screenshot_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:text-blue-300 underline flex items-center gap-1"
+                              >
+                                <Eye className="w-4 h-4" />
+                                View
+                              </a>
+                            ) : (
+                              <span className="text-gray-500">No screenshot</span>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-semibold">
+                              {order.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Failed Orders Section */}
+            <div className="bg-gradient-to-br from-red-900/30 to-pink-900/30 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-red-500/20 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-2 sm:p-3 bg-red-500/20 rounded-lg">
+                    <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-400" />
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white">Failed Orders</h2>
+                </div>
+                <button
+                  onClick={loadOrdersReport}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Refresh
+                </button>
+              </div>
+
+              {orders.failed.length === 0 ? (
+                <div className="text-gray-400 text-center py-8">No failed orders.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-red-500/20">
+                        <th className="text-left p-3 text-red-400">Timestamp</th>
+                        <th className="text-left p-3 text-red-400">Screenshot</th>
+                        <th className="text-left p-3 text-red-400">Status</th>
+                        <th className="text-left p-3 text-red-400">Worker Log</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.failed.map((order, index) => (
+                        <tr key={index} className="border-b border-red-500/10 hover:bg-red-500/5">
+                          <td className="p-3 text-gray-300">{order.timestamp}</td>
+                          <td className="p-3">
+                            {order.screenshot_url && order.screenshot_url !== 'N/A' ? (
+                              <a
+                                href={order.screenshot_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:text-blue-300 underline flex items-center gap-1"
+                              >
+                                <Eye className="w-4 h-4" />
+                                View
+                              </a>
+                            ) : (
+                              <span className="text-gray-500">No screenshot</span>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-semibold">
+                              {order.status}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            {order.pastebin_url ? (
+                              <a
+                                href={order.pastebin_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 rounded transition-colors text-sm w-fit"
+                              >
+                                <FileText className="w-4 h-4" />
+                                View Log
+                              </a>
+                            ) : (
+                              <span className="text-gray-500 text-sm">No log available</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
 
@@ -1727,6 +1876,14 @@ function Dashboard() {
           ))}
         </div>
       </div>
+
+      {/* Hidden audio elements for sound effects */}
+      <audio ref={startSoundRef} preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg" />
+      </audio>
+      <audio ref={completionSoundRef} preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" type="audio/mpeg" />
+      </audio>
     </div>
   )
 }

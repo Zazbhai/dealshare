@@ -1133,28 +1133,97 @@ def main():
             page.screenshot(path="address_save_failed.png")
             raise Exception("Could not save address")
         
-        time.sleep(3)
+        time.sleep(2)
 
         # -----------------------------
         # PAYMENT
         # -----------------------------
         print("💳 Selecting payment method...")
-        
+
         # Wait for payment options to load
         page.wait_for_selector("div.Payment_methodItem__BLz7I", timeout=10000)
-        time.sleep(1)
-        
-        # Click Cash on Delivery
-        cod_option = page.locator(
-            "div.Payment_methodItem__BLz7I",
-            has_text="Cash on Delivery"
-        ).first
-        
-        cod_option.scroll_into_view_if_needed()
-        cod_option.click(force=True)
-        print("✅ COD selected")
-        time.sleep(2)
+        time.sleep(2)  # Increased wait for payment UI to fully load
 
+        # Try multiple methods to select COD
+        cod_selected = False
+
+        # Method 1: Find by class and text
+        try:
+            cod_option = page.locator(
+                "div.Payment_methodItem__BLz7I",
+                has_text="Cash on Delivery"
+            ).first
+            
+            if cod_option.count() > 0:
+                cod_option.scroll_into_view_if_needed()
+                time.sleep(0.5)
+                
+                if robust_click(page, cod_option, method="locator"):
+                    print("✅ COD selected (Method 1: class + text)")
+                    cod_selected = True
+        except Exception as e:
+            print(f"⚠️ Method 1 failed: {e}")
+
+        # Method 2: Find by text only
+        if not cod_selected:
+            try:
+                cod_text = page.locator("text=Cash on Delivery").first
+                if cod_text.count() > 0:
+                    cod_text.scroll_into_view_if_needed()
+                    time.sleep(0.5)
+                    
+                    if robust_click(page, cod_text, method="locator"):
+                        print("✅ COD selected (Method 2: text only)")
+                        cod_selected = True
+            except Exception as e:
+                print(f"⚠️ Method 2 failed: {e}")
+
+        # Method 3: Find parent container and click
+        if not cod_selected:
+            try:
+                cod_containers = page.locator("div.Payment_methodItem__BLz7I")
+                for i in range(cod_containers.count()):
+                    container = cod_containers.nth(i)
+                    text_content = container.text_content()
+                    if "Cash on Delivery" in text_content or "COD" in text_content:
+                        container.scroll_into_view_if_needed()
+                        time.sleep(0.5)
+                        
+                        if robust_click(page, container, method="locator"):
+                            print("✅ COD selected (Method 3: container iteration)")
+                            cod_selected = True
+                            break
+            except Exception as e:
+                print(f"⚠️ Method 3 failed: {e}")
+
+        # Method 4: JS click on any element containing COD text
+        if not cod_selected:
+            try:
+                page.evaluate("""
+                    () => {
+                        const elements = Array.from(document.querySelectorAll('*'));
+                        const codElement = elements.find(el => 
+                            el.textContent.includes('Cash on Delivery') || 
+                            el.textContent.includes('COD')
+                        );
+                        if (codElement) {
+                            codElement.click();
+                            return true;
+                        }
+                        return false;
+                    }
+                """)
+                print("✅ COD selected (Method 4: JS search)")
+                cod_selected = True
+            except Exception as e:
+                print(f"⚠️ Method 4 failed: {e}")
+
+        if not cod_selected:
+            print("❌ Failed to select COD payment method")
+            page.screenshot(path="cod_selection_failed.png")
+            raise Exception("Could not select Cash on Delivery")
+
+        time.sleep(2)
         print("📦 Attempting to place order...")
         
         # Try multiple selectors for the place order button

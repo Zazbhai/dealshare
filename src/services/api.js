@@ -48,7 +48,7 @@ export const getBalance = async () => {
   } catch (error) {
     // Preserve the exact error message from the backend
     let errorMessage = error.response?.data?.error || error.message
-    
+
     // Only provide default messages for network/connection errors
     if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
       errorMessage = `Cannot connect to backend server. Make sure the server is running on ${import.meta.env.VITE_BACKEND_URL || window.location.origin.replace(':3000', ':5000')}`
@@ -60,14 +60,14 @@ export const getBalance = async () => {
     // For 400 and 401, use the exact error message from backend
     // 400 = API key not configured
     // 401 = Invalid API key
-    
+
     console.error('getBalance error:', {
       message: error.message,
       code: error.code,
       status: error.response?.status,
       error: error.response?.data
     })
-    
+
     return {
       success: false,
       error: errorMessage,
@@ -97,7 +97,7 @@ export const getPrice = async (country = '22', operator = '1', service = 'pfk') 
   } catch (error) {
     // Preserve the exact error message from the backend
     let errorMessage = error.response?.data?.error || error.message
-    
+
     // Only provide default messages for network/connection errors
     if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
       errorMessage = `Cannot connect to backend server. Make sure the server is running on ${import.meta.env.VITE_BACKEND_URL || window.location.origin.replace(':3000', ':5000')}`
@@ -107,14 +107,14 @@ export const getPrice = async (country = '22', operator = '1', service = 'pfk') 
     // For 400 and 401, use the exact error message from backend
     // 400 = API key not configured
     // 401 = Invalid API key
-    
+
     console.error('getPrice error:', {
       message: error.message,
       code: error.code,
       status: error.response?.status,
       error: error.response?.data
     })
-    
+
     return {
       success: false,
       error: errorMessage,
@@ -160,13 +160,13 @@ export const getOTP = async (requestId, timeout = 120.0, pollInterval = 2.0) => 
       baseURL: '/api',
       timeout: 150000, // 2.5 minutes for OTP polling (backend polls for 2 minutes)
     })
-    
+
     // Add token to OTP request
     const token = localStorage.getItem('token')
     if (token) {
       otpApi.defaults.headers.common['Authorization'] = `Bearer ${token}`
     }
-    
+
     const response = await otpApi.post('/otp', {
       request_id: requestId,
       timeout,
@@ -197,21 +197,21 @@ export const cancelNumber = async (requestId) => {
 
 export const startAutomation = async (formData) => {
   console.log('[DEBUG API] startAutomation called with formData:', formData)
-  
+
   try {
     // Automation start might take time, use longer timeout
     const automationApi = axios.create({
       baseURL: '/api',
       timeout: 60000, // 1 minute for automation start
     })
-    
+
     const token = localStorage.getItem('token')
     console.log('[DEBUG API] Token present:', !!token)
-    
+
     if (token) {
       automationApi.defaults.headers.common['Authorization'] = `Bearer ${token}`
     }
-    
+
     const requestData = {
       name: formData.name,
       house_flat_no: formData.houseFlatNo,
@@ -230,17 +230,17 @@ export const startAutomation = async (formData) => {
       search_input: formData.searchInput || 'chinu juice center',
       location_text: formData.locationText || 'Chinu Juice Center, Jaswant Nagar, mod, Khatipura, Jaipur, Rajasthan, India'
     }
-    
+
     console.log('[DEBUG API] Making POST request to /api/automation/start')
     console.log('[DEBUG API] Request data:', requestData)
-    
+
     const response = await automationApi.post('/automation/start', requestData)
-    
+
     console.log('[DEBUG API] Response received:', {
       status: response.status,
       data: response.data
     })
-    
+
     return response.data
   } catch (error) {
     console.error('[DEBUG API] Error in startAutomation:', error)
@@ -250,7 +250,7 @@ export const startAutomation = async (formData) => {
       status: error.response?.status,
       statusText: error.response?.statusText
     })
-    
+
     return {
       success: false,
       error: error.response?.data?.error || error.message || 'Request timeout'
@@ -285,7 +285,7 @@ export const getAutomationStatus = async () => {
 // Reports API
 export const getOrdersReport = async () => {
   try {
-    const response = await api.get('/reports/orders')
+    const response = await api.get('/orders/report')
     return response.data
   } catch (error) {
     return {
@@ -297,7 +297,7 @@ export const getOrdersReport = async () => {
 
 export const downloadOrdersReport = async () => {
   try {
-    const response = await api.get('/reports/orders/download', {
+    const response = await api.get('/orders/download', {
       responseType: 'blob'
     })
     const url = window.URL.createObjectURL(new Blob([response.data]))
