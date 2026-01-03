@@ -1504,7 +1504,7 @@ def main():
                             break
                 
                 # Determine status
-                status = "Success" if not error_found else f"Failed - {error_reason}"
+                status = "success" if not error_found else f"Failed - {error_reason}"
                 
                 # Local Screenshot
                 screenshot_url = "N/A"

@@ -336,11 +336,15 @@ def get_orders_report():
                     "pastebin_url": row.get('pastebin_url', '')
                 }
                 
-                # Categorize based on status
-                if order_data['status'] == 'success':
+                # Categorize based on status (case-insensitive)
+                if str(order_data['status']).lower() == 'success':
                     success_orders.append(order_data)
                 else:
                     failed_orders.append(order_data)
+        
+        # Sort by timestamp descending (latest first)
+        success_orders.sort(key=lambda x: x['timestamp'], reverse=True)
+        failed_orders.sort(key=lambda x: x['timestamp'], reverse=True)
         
         return jsonify({
             "success": True,
