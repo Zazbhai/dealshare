@@ -1263,9 +1263,28 @@ def main():
         # -----------------------------
         print("💳 Selecting payment method...")
 
-        # Wait for payment options to load
-        page.wait_for_selector("div.Payment_methodItem__BLz7I", timeout=10000)
-        time.sleep(2)  # Increased wait for payment UI to fully load
+        # Wait for payment page to load - try multiple selectors
+        payment_loaded = False
+        selectors_to_try = [
+            "div.Payment_methodItem__BLz7I",
+            "img[alt='COD']",
+            "text=Cash on Delivery",
+            "p.text-medium-xl",
+        ]
+
+        for selector in selectors_to_try:
+            try:
+                page.wait_for_selector(selector, timeout=5000)
+                print(f"✅ Payment page loaded (found: {selector})")
+                payment_loaded = True
+                break
+            except:
+                continue
+
+        if not payment_loaded:
+            print("⚠️ Payment selectors not found, trying anyway...")
+
+        time.sleep(2)  # Wait for UI to fully load
 
         # Try multiple methods to select COD
         cod_selected = False
@@ -1301,7 +1320,23 @@ def main():
             except Exception as e:
                 print(f"⚠️ Method 2 failed: {e}")
 
-        # Method 3: Find parent container and click
+        # Method 3: Find by COD image alt text
+        if not cod_selected:
+            try:
+                cod_img = page.locator("img[alt='COD']").first
+                if cod_img.count() > 0:
+                    # Get parent container and click it
+                    parent = cod_img.locator("xpath=ancestor::div[contains(@class, 'Payment_methodItem')]").first
+                    parent.scroll_into_view_if_needed()
+                    time.sleep(0.5)
+                    
+                    if robust_click(page, parent, method="locator"):
+                        print("✅ COD selected (Method 3: via COD image)")
+                        cod_selected = True
+            except Exception as e:
+                print(f"⚠️ Method 3 failed: {e}")
+
+        # Method 4: Find parent container and click
         if not cod_selected:
             try:
                 cod_containers = page.locator("div.Payment_methodItem__BLz7I")
@@ -1313,22 +1348,41 @@ def main():
                         time.sleep(0.5)
                         
                         if robust_click(page, container, method="locator"):
-                            print("✅ COD selected (Method 3: container iteration)")
+                            print("✅ COD selected (Method 4: container iteration)")
                             cod_selected = True
                             break
             except Exception as e:
-                print(f"⚠️ Method 3 failed: {e}")
+                print(f"⚠️ Method 4 failed: {e}")
 
-        # Method 4: JS click on any element containing COD text
+        # Method 5: Find by p.text-medium-xl containing "Cash on Delivery"
         if not cod_selected:
             try:
-                page.evaluate("""
+                paragraphs = page.locator("p.text-medium-xl")
+                for i in range(paragraphs.count()):
+                    p = paragraphs.nth(i)
+                    if "Cash on Delivery" in p.text_content():
+                        # Get parent container
+                        parent = p.locator("xpath=..").first
+                        parent.scroll_into_view_if_needed()
+                        time.sleep(0.5)
+                        
+                        if robust_click(page, parent, method="locator"):
+                            print("✅ COD selected (Method 5: via paragraph text)")
+                            cod_selected = True
+                            break
+            except Exception as e:
+                print(f"⚠️ Method 5 failed: {e}")
+
+        # Method 6: JS click on any element containing COD text
+        if not cod_selected:
+            try:
+                result = page.evaluate("""
                     () => {
                         const elements = Array.from(document.querySelectorAll('*'));
-                        const codElement = elements.find(el => 
-                            el.textContent.includes('Cash on Delivery') || 
-                            el.textContent.includes('COD')
-                        );
+                        const codElement = elements.find(el => {
+                            const text = el.textContent || '';
+                            return text.includes('Cash on Delivery') || text.includes('COD');
+                        });
                         if (codElement) {
                             codElement.click();
                             return true;
@@ -1336,15 +1390,19 @@ def main():
                         return false;
                     }
                 """)
-                print("✅ COD selected (Method 4: JS search)")
-                cod_selected = True
+                if result:
+                    print("✅ COD selected (Method 6: JS search)")
+                    cod_selected = True
             except Exception as e:
-                print(f"⚠️ Method 4 failed: {e}")
+                print(f"⚠️ Method 6 failed: {e}")
 
         if not cod_selected:
-            fail_and_exit("Could not select Cash on Delivery", page, browser)
-        time.sleep(2)
+            print("❌ Failed to select COD payment method after all attempts")
+            page.screenshot(path="cod_selection_failed.png")
+            raise Exception("Could not select Cash on Delivery")
 
+        print("✅ COD payment method confirmed")
+        time.sleep(2)
         print("📦 Attempting to place order...")
         
         # Try multiple selectors for the place order button
