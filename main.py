@@ -1263,145 +1263,145 @@ def main():
         # -----------------------------
         print("💳 Selecting payment method...")
 
-        # Wait for payment page to load - try multiple selectors
-        payment_loaded = False
-        selectors_to_try = [
-            "div.Payment_methodItem__BLz7I",
-            "img[alt='COD']",
-            "text=Cash on Delivery",
-            "p.text-medium-xl",
-        ]
-
-        for selector in selectors_to_try:
-            try:
-                page.wait_for_selector(selector, timeout=5000)
-                print(f"✅ Payment page loaded (found: {selector})")
-                payment_loaded = True
-                break
-            except:
-                continue
-
-        if not payment_loaded:
-            print("⚠️ Payment selectors not found, trying anyway...")
-
-        time.sleep(2)  # Wait for UI to fully load
+        # Wait for payment page to stabilize
+        time.sleep(3)
 
         # Try multiple methods to select COD
         cod_selected = False
 
         # Method 1: Find by class and text
+        print("🔄 Trying Method 1: class + text...")
         try:
-            cod_option = page.locator(
-                "div.Payment_methodItem__BLz7I",
-                has_text="Cash on Delivery"
-            ).first
-            
+            cod_option = page.locator("div.Payment_methodItem__BLz7I:has-text('Cash on Delivery')")
             if cod_option.count() > 0:
-                cod_option.scroll_into_view_if_needed()
+                print(f"  Found {cod_option.count()} COD options")
+                first_option = cod_option.first
+                first_option.scroll_into_view_if_needed(timeout=3000)
                 time.sleep(0.5)
-                
-                if robust_click(page, cod_option, method="locator"):
-                    print("✅ COD selected (Method 1: class + text)")
-                    cod_selected = True
+                first_option.click(force=True, timeout=3000)
+                print("✅ COD selected (Method 1)")
+                cod_selected = True
         except Exception as e:
             print(f"⚠️ Method 1 failed: {e}")
 
         # Method 2: Find by text only
         if not cod_selected:
+            print("🔄 Trying Method 2: text only...")
             try:
-                cod_text = page.locator("text=Cash on Delivery").first
+                cod_text = page.locator("text=Cash on Delivery")
                 if cod_text.count() > 0:
-                    cod_text.scroll_into_view_if_needed()
+                    print(f"  Found {cod_text.count()} text matches")
+                    first_text = cod_text.first
+                    first_text.scroll_into_view_if_needed(timeout=3000)
                     time.sleep(0.5)
-                    
-                    if robust_click(page, cod_text, method="locator"):
-                        print("✅ COD selected (Method 2: text only)")
-                        cod_selected = True
+                    first_text.click(force=True, timeout=3000)
+                    print("✅ COD selected (Method 2)")
+                    cod_selected = True
             except Exception as e:
                 print(f"⚠️ Method 2 failed: {e}")
 
-        # Method 3: Find by COD image alt text
+        # Method 3: Find by COD image
         if not cod_selected:
+            print("🔄 Trying Method 3: COD image...")
             try:
-                cod_img = page.locator("img[alt='COD']").first
+                cod_img = page.locator("img[alt='COD']")
                 if cod_img.count() > 0:
-                    # Get parent container and click it
-                    parent = cod_img.locator("xpath=ancestor::div[contains(@class, 'Payment_methodItem')]").first
-                    parent.scroll_into_view_if_needed()
+                    print(f"  Found {cod_img.count()} COD images")
+                    first_img = cod_img.first
+                    first_img.scroll_into_view_if_needed(timeout=3000)
                     time.sleep(0.5)
-                    
-                    if robust_click(page, parent, method="locator"):
-                        print("✅ COD selected (Method 3: via COD image)")
-                        cod_selected = True
+                    first_img.click(force=True, timeout=3000)
+                    print("✅ COD selected (Method 3)")
+                    cod_selected = True
             except Exception as e:
                 print(f"⚠️ Method 3 failed: {e}")
 
-        # Method 4: Find parent container and click
+        # Method 4: Iterate through payment items
         if not cod_selected:
+            print("🔄 Trying Method 4: iterate containers...")
             try:
-                cod_containers = page.locator("div.Payment_methodItem__BLz7I")
-                for i in range(cod_containers.count()):
-                    container = cod_containers.nth(i)
-                    text_content = container.text_content()
-                    if "Cash on Delivery" in text_content or "COD" in text_content:
-                        container.scroll_into_view_if_needed()
+                all_items = page.locator("div.Payment_methodItem__BLz7I")
+                count = all_items.count()
+                print(f"  Found {count} payment items")
+                
+                for i in range(count):
+                    item = all_items.nth(i)
+                    text = item.text_content()
+                    print(f"    Item {i}: {text[:50]}")
+                    
+                    if "Cash on Delivery" in text or "COD" in text:
+                        print(f"    ✓ Found COD at index {i}")
+                        item.scroll_into_view_if_needed(timeout=3000)
                         time.sleep(0.5)
-                        
-                        if robust_click(page, container, method="locator"):
-                            print("✅ COD selected (Method 4: container iteration)")
-                            cod_selected = True
-                            break
+                        item.click(force=True, timeout=3000)
+                        print("✅ COD selected (Method 4)")
+                        cod_selected = True
+                        break
             except Exception as e:
                 print(f"⚠️ Method 4 failed: {e}")
 
-        # Method 5: Find by p.text-medium-xl containing "Cash on Delivery"
+        # Method 5: JavaScript click
         if not cod_selected:
-            try:
-                paragraphs = page.locator("p.text-medium-xl")
-                for i in range(paragraphs.count()):
-                    p = paragraphs.nth(i)
-                    if "Cash on Delivery" in p.text_content():
-                        # Get parent container
-                        parent = p.locator("xpath=..").first
-                        parent.scroll_into_view_if_needed()
-                        time.sleep(0.5)
-                        
-                        if robust_click(page, parent, method="locator"):
-                            print("✅ COD selected (Method 5: via paragraph text)")
-                            cod_selected = True
-                            break
-            except Exception as e:
-                print(f"⚠️ Method 5 failed: {e}")
-
-        # Method 6: JS click on any element containing COD text
-        if not cod_selected:
+            print("🔄 Trying Method 5: JavaScript...")
             try:
                 result = page.evaluate("""
                     () => {
-                        const elements = Array.from(document.querySelectorAll('*'));
-                        const codElement = elements.find(el => {
-                            const text = el.textContent || '';
-                            return text.includes('Cash on Delivery') || text.includes('COD');
-                        });
-                        if (codElement) {
-                            codElement.click();
-                            return true;
+                        // Find all divs
+                        const divs = document.querySelectorAll('div');
+                        for (let div of divs) {
+                            const text = div.textContent || '';
+                            if (text.includes('Cash on Delivery') || text.includes('COD')) {
+                                div.click();
+                                return true;
+                            }
                         }
                         return false;
                     }
                 """)
                 if result:
-                    print("✅ COD selected (Method 6: JS search)")
+                    print("✅ COD selected (Method 5)")
                     cod_selected = True
+                else:
+                    print("⚠️ Method 5: JS found no matching element")
+            except Exception as e:
+                print(f"⚠️ Method 5 failed: {e}")
+
+        # Method 6: Find paragraph and click parent
+        if not cod_selected:
+            print("🔄 Trying Method 6: paragraph parent...")
+            try:
+                paragraphs = page.locator("p.text-medium-xl")
+                count = paragraphs.count()
+                print(f"  Found {count} paragraphs")
+                
+                for i in range(count):
+                    p = paragraphs.nth(i)
+                    text = p.text_content()
+                    if "Cash on Delivery" in text:
+                        print(f"    ✓ Found COD paragraph")
+                        # Click the paragraph itself
+                        p.scroll_into_view_if_needed(timeout=3000)
+                        time.sleep(0.5)
+                        p.click(force=True, timeout=3000)
+                        print("✅ COD selected (Method 6)")
+                        cod_selected = True
+                        break
             except Exception as e:
                 print(f"⚠️ Method 6 failed: {e}")
 
+        # Final check
         if not cod_selected:
             print("❌ Failed to select COD payment method after all attempts")
-            page.screenshot(path="cod_selection_failed.png")
+            print("📸 Taking screenshot...")
+            try:
+                page.screenshot(path="cod_selection_failed.png", full_page=True)
+                print("Screenshot saved: cod_selection_failed.png")
+            except:
+                pass
             raise Exception("Could not select Cash on Delivery")
 
         print("✅ COD payment method confirmed")
+
         time.sleep(2)
         print("📦 Attempting to place order...")
         
