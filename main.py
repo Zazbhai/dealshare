@@ -981,6 +981,7 @@ def main():
                         print(f"⚠️ Retry attempt {retry_attempt}/5 failed: {retry_error}")
                         if retry_attempt == 5:
                             print(f"❌ All 5 retry attempts failed. Last error: {retry_error}")
+                            ail_and_exit("Location Typing Error", page, browser)
                             raise
                         time.sleep(2)  # Wait before next retry
         else:
