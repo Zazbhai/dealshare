@@ -962,16 +962,27 @@ def main():
                     print(f"❌ Location selection failed: Page was closed. Cannot continue.")
                     raise
                 
-                print(f"⚠ Location selection failed, retrying... Error: {error_msg}")
-                try:
-                    # Click address bar fallback
-                    page.wait_for_selector("p.Address_addressBold__GlDKW", timeout=8000)
-                    page.click("p.Address_addressBold__GlDKW")
-                    time.sleep(1)
-                    select_location(page, search_input, location_text)
-                except (TimeoutError, PlaywrightError, Exception) as retry_error:
-                    print(f"❌ Location selection retry also failed: {retry_error}")
-                    raise
+                print("⚠ Location selection failed, retrying...")
+                
+                # Retry up to 5 times
+                retry_success = False
+                for retry_attempt in range(1, 6):
+                    try:
+                        print(f"🔄 Retry attempt {retry_attempt}/5...")
+                        # Click address bar fallback
+                        page.wait_for_selector("p.Address_addressBold__GlDKW", timeout=8000)
+                        page.click("p.Address_addressBold__GlDKW")
+                        time.sleep(1)
+                        select_location(page, search_input, location_text)
+                        print(f"✅ Location selection succeeded on retry attempt {retry_attempt}")
+                        retry_success = True
+                        break
+                    except (TimeoutError, PlaywrightError, Exception) as retry_error:
+                        print(f"⚠️ Retry attempt {retry_attempt}/5 failed: {retry_error}")
+                        if retry_attempt == 5:
+                            print(f"❌ All 5 retry attempts failed. Last error: {retry_error}")
+                            raise
+                        time.sleep(2)  # Wait before next retry
         else:
             print("⏭️ Location selection step skipped (disabled in settings)")
 
