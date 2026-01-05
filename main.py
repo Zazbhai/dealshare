@@ -1249,7 +1249,153 @@ def main():
             
             time.sleep(2)
 
-            # -----------------------------
+            # Check for location change "Proceed" modal button
+            try:
+                print("🔍 Checking for location change 'Proceed' button...")
+                proceed_modal_btn = page.locator("button:has-text('Proceed')")
+                
+                if proceed_modal_btn.count() > 0:
+                    print("📍 Location change modal detected - clicking Proceed...")
+                    proceed_modal_btn.wait_for(state="visible", timeout=3000)
+                    
+                    # Try multiple click methods for reliability
+                    if robust_click(page, proceed_modal_btn, method="locator"):
+                        print("✅ Location modal 'Proceed' clicked (robust)")
+                    else:
+                        # Fallback: Try regular click
+                        try:
+                            proceed_modal_btn.click(timeout=3000)
+                            print("✅ Location modal 'Proceed' clicked (regular)")
+                        except:
+                            try:
+                                proceed_modal_btn.click(force=True, timeout=3000)
+                                print("✅ Location modal 'Proceed' clicked (force)")
+                            except:
+                                try:
+                                    page.evaluate("(el) => el.click()", proceed_modal_btn.first)
+                                    print("✅ Location modal 'Proceed' clicked (JS)")
+                                except:
+                                    print("⚠️ Failed to click location modal Proceed button")
+                    
+                    time.sleep(2)  # Wait after modal dismissal
+                else:
+                    print("ℹ️ No location modal detected, continuing...")
+            except Exception as e:
+                print(f"⚠️ Error checking for Proceed modal: {e}")
+                # Continue anyway - modal might not appear every time
+
+
+            # Check for "Add Address" scenario and handle "Change" flow
+            try:
+                print("🔍 Checking for 'Add Address' button...")
+                time.sleep(1)
+                
+                # Check if "Add Address" button exists (indicating we need to change address)
+                add_address_btn = page.locator("button:has-text('Add Address')")
+                
+                if add_address_btn.count() > 0:
+                    print("📍 'Add Address' button detected - clicking 'Change' to update address...")
+                    
+                    # Click on "Change" link
+                    change_link = page.locator("span.CartHeader_changeCta__92ZgT")
+                    if change_link.count() > 0:
+                        change_link.wait_for(state="visible", timeout=5000)
+                        
+                        # Try multiple click methods
+                        if robust_click(page, change_link, method="locator"):
+                            print("✅ 'Change' link clicked (robust)")
+                        else:
+                            try:
+                                change_link.click(timeout=3000)
+                                print("✅ 'Change' link clicked (regular)")
+                            except:
+                                try:
+                                    change_link.click(force=True, timeout=3000)
+                                    print("✅ 'Change' link clicked (force)")
+                                except:
+                                    print("⚠️ Failed to click 'Change' link")
+                        
+                        time.sleep(2)
+                        
+                        # Get address details from environment
+                        automation_name = os.environ.get('AUTOMATION_NAME', '')
+                        automation_house_flat = os.environ.get('AUTOMATION_HOUSE_FLAT', '')
+                        automation_landmark = os.environ.get('AUTOMATION_LANDMARK', '')
+                        
+                        if automation_name and automation_house_flat and automation_landmark:
+                            # Fill address form
+                            try:
+                                print("📝 Filling address in 'Change' flow...")
+                                
+                                # Wait for form
+                                page.wait_for_selector("input[name='userName']", state="visible", timeout=10000)
+                                time.sleep(1)
+                                
+                                # Fill name
+                                name_input = page.locator("input[name='userName']")
+                                name_input.fill(automation_name)
+                                print(f"✅ Filled name: {automation_name}")
+                                time.sleep(0.5)
+                                
+                                # Fill flat
+                                flat_input = page.locator("input[name='flat']")
+                                flat_input.fill(automation_house_flat)
+                                print(f"✅ Filled house/flat: {automation_house_flat}")
+                                time.sleep(0.5)
+                                
+                                # Fill landmark
+                                landmark_input = page.locator("input[name='landMark']")
+                                landmark_input.fill(automation_landmark)
+                                print(f"✅ Filled landmark: {automation_landmark}")
+                                time.sleep(1)
+                                
+                                # Click Save Address
+                                save_btn = page.locator("button.btn.btn-secondary", has_text="Save Address")
+                                save_btn.wait_for(state="visible", timeout=5000)
+                                time.sleep(0.5)
+                                
+                                if robust_click(page, save_btn, method="locator"):
+                                    print("✅ Save Address clicked in 'Change' flow")
+                                else:
+                                    print("⚠️ Failed to click Save Address")
+                                
+                                time.sleep(3)
+                                
+                                # Check if cart proceed button appeared again
+                                print("🔍 Checking if cart 'Proceed' button reappeared...")
+                                cart_proceed_btn = page.locator("button.AddToCart_cartButton__tWwqP")
+                                
+                                if cart_proceed_btn.count() > 0 and cart_proceed_btn.first.is_visible():
+                                    print("🔄 Cart 'Proceed' button detected again - clicking...")
+                                    
+                                    if robust_click(page, cart_proceed_btn, method="locator"):
+                                        print("✅ Cart 'Proceed' re-clicked (robust)")
+                                    else:
+                                        try:
+                                            cart_proceed_btn.click(force=True, timeout=3000)
+                                            print("✅ Cart 'Proceed' re-clicked (force)")
+                                        except:
+                                            print("⚠️ Failed to re-click cart Proceed button")
+                                    
+                                    time.sleep(2)
+                                else:
+                                    print("ℹ️ Cart 'Proceed' button not found, continuing...")
+                                
+                            except Exception as e:
+                                print(f"⚠️ Error filling address in 'Change' flow: {e}")
+                        else:
+                            print("⚠️ Address details missing, skipping 'Change' flow")
+                    else:
+                        print("⚠️ 'Change' link not found")
+                else:
+                    print("ℹ️ No 'Add Address' button detected, continuing to normal flow...")
+                    
+            except Exception as e:
+                print(f"⚠️ Error in 'Change' address flow: {e}")
+                # Continue anyway
+
+
+
             # ADDRESS DETAILS
             # -----------------------------
             print("📝 Filling address details...")
