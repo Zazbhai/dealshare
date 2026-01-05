@@ -873,18 +873,46 @@ def main():
         try:
             browser_args = [
                 '--disable-blink-features=AutomationControlled',
-                '--disable-dev-shm-usage',  # Key for reducing memory crashes in parallel execution
+                '--disable-dev-shm-usage',  # Critical for Docker/parallel
                 '--disable-gpu',
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-web-security',
                 '--disable-features=IsolateOrigins,site-per-process',
+                # Performance optimizations for parallel execution
+                '--disable-background-networking',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-breakpad',
+                '--disable-client-side-phishing-detection',
+                '--disable-component-extensions-with-background-pages',
+                '--disable-default-apps',
+                '--disable-extensions',
+                '--disable-features=TranslateUI',
+                '--disable-hang-monitor',
+                '--disable-ipc-flooding-protection',
+                '--disable-popup-blocking',
+                '--disable-prompt-on-repost',
+                '--disable-renderer-backgrounding',
+                '--disable-sync',
+                '--force-color-profile=srgb',
+                '--metrics-recording-only',
+                '--no-first-run',
+                '--password-store=basic',
+                '--use-mock-keychain',
+                '--mute-audio',  # Disable audio to save resources
+                '--disable-software-rasterizer',
+                # Memory optimizations
+                '--js-flags=--max-old-space-size=512',  # Limit JS heap to 512MB per instance
+                '--renderer-process-limit=2',  # Limit renderer processes
             ]
+
             
             browser = p.chromium.launch(
-                headless=False,  # Run in visible mode for local development
-                slow_mo=100,  # No delay for better performance
-                args=browser_args
+                headless=True,  # Run in visible mode for local development
+                slow_mo=0,  # No delay for better performance
+                args=browser_args,
+                timeout=30000
             )
         except Exception as e:
             print(f"❌ CRITICAL: Failed to launch browser: {e}")
@@ -895,9 +923,18 @@ def main():
         longitude = float(os.environ.get('LONGITUDE', '75.774836'))
         should_select_location = os.environ.get('SELECT_LOCATION', '1') == '1'
         
+            # Optimize context creation
         context = browser.new_context(
-            geolocation={"latitude": latitude, "longitude": longitude},
-            permissions=["geolocation"]
+        geolocation={"latitude": latitude, "longitude": longitude},
+        permissions=["geolocation"],
+        # Performance optimizations
+        viewport={"width": 1280, "height": 720},  # Smaller viewport
+        device_scale_factor=1,
+        has_touch=False,
+        is_mobile=False,
+        java_script_enabled=True,
+        bypass_csp=True,
+        ignore_https_errors=True,
         )
 
         page = context.new_page()
@@ -923,7 +960,7 @@ def main():
                 error_msg = str(e)
                 if "Page closed" in error_msg or "TargetClosedError" in error_msg or "has been closed" in error_msg:
                     print(f"❌ Location selection failed: Page was closed. Cannot continue.")
-                    fail_and_exit(f"Location selection failed: {error_msg}", page, browser)
+                    raise
                 
                 print(f"⚠ Location selection failed, retrying... Error: {error_msg}")
                 try:
@@ -934,7 +971,7 @@ def main():
                     select_location(page, search_input, location_text)
                 except (TimeoutError, PlaywrightError, Exception) as retry_error:
                     print(f"❌ Location selection retry also failed: {retry_error}")
-                    fail_and_exit(f"Location selection retry failed: {retry_error}", page, browser)
+                    raise
         else:
             print("⏭️ Location selection step skipped (disabled in settings)")
 
