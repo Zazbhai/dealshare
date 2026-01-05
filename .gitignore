@@ -33,5 +33,5 @@ npm-debug.log*
 
 # User settings (contains sensitive data)
 user_settings/
-
+my_orders.csv
 

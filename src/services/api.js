@@ -293,101 +293,113 @@ export const getOrdersReport = async () => {
       error: error.message
     }
   }
-}
 
-export const downloadOrdersReport = async () => {
-  try {
-    const response = await api.get('/orders/download', {
-      responseType: 'blob'
-    })
-    const url = window.URL.createObjectURL(new Blob([response.data]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', 'my_orders.csv')
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    return { success: true }
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message
+  export const clearOrdersReport = async () => {
+    try {
+      const response = await api.delete('/orders/clear')
+      return response.data
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      }
     }
   }
-}
 
-// Logs API
-export const getLogsList = async () => {
-  try {
-    const response = await api.get('/logs/list')
-    return response.data
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message
+
+  export const downloadOrdersReport = async () => {
+    try {
+      const response = await api.get('/orders/download', {
+        responseType: 'blob'
+      })
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', 'my_orders.csv')
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      return { success: true }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      }
     }
   }
-}
 
-
-
-export const viewFailedLog = async (filename) => {
-  try {
-    const response = await api.get('/logs/failed', {
-      params: { filename }
-    })
-    return response.data
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message
+  // Logs API
+  export const getLogsList = async () => {
+    try {
+      const response = await api.get('/logs/list')
+      return response.data
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      }
     }
   }
-}
 
 
-export const viewScreenshot = async (filename) => {
-  try {
-    const response = await api.get('/screenshots/view', {
-      params: { filename },
-      responseType: 'blob'
-    })
-    return { success: true, blob: response.data }
-  } catch (error) {
-    return { success: false, error: error.message }
-  }
-}
 
-export const viewLogFile = async (filename) => {
-  try {
-    const response = await api.get(`/logs/view/${filename}`)
-    return response.data
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message
+  export const viewFailedLog = async (filename) => {
+    try {
+      const response = await api.get('/logs/failed', {
+        params: { filename }
+      })
+      return response.data
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      }
     }
   }
-}
 
-export const downloadLogFile = async (filename) => {
-  try {
-    const response = await api.get(`/logs/download/${filename}`, {
-      responseType: 'blob'
-    })
-    const url = window.URL.createObjectURL(new Blob([response.data]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', filename)
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    return { success: true }
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message
+
+  export const viewScreenshot = async (filename) => {
+    try {
+      const response = await api.get('/screenshots/view', {
+        params: { filename },
+        responseType: 'blob'
+      })
+      return { success: true, blob: response.data }
+    } catch (error) {
+      return { success: false, error: error.message }
     }
   }
-}
+
+  export const viewLogFile = async (filename) => {
+    try {
+      const response = await api.get(`/logs/view/${filename}`)
+      return response.data
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  export const downloadLogFile = async (filename) => {
+    try {
+      const response = await api.get(`/logs/download/${filename}`, {
+        responseType: 'blob'
+      })
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', filename)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      return { success: true }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
 

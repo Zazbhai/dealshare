@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Play, Square, TrendingUp, Zap, Activity, FileText, User, Home, MapPin, Bug, Download, Eye, RefreshCw, AlertCircle, X, Edit2, Save, Link2, ChevronDown, Navigation2, ToggleLeft, ToggleRight, ShoppingCart, Plus, Trash2 } from 'lucide-react'
-import { getBalance, getGlobalSettings, startAutomation, stopAutomation, getAutomationStatus, getOrdersReport, downloadOrdersReport, getLogsList, viewLogFile, downloadLogFile, viewFailedLog, viewScreenshot } from '../services/api'
+import { getBalance, getGlobalSettings, startAutomation, stopAutomation, getAutomationStatus, getOrdersReport, downloadOrdersReport, clearOrdersReport, getLogsList, viewLogFile, downloadLogFile, viewFailedLog, viewScreenshot } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 import { updateSettings } from '../services/auth'
 import ConnectionDebugger from '../components/ConnectionDebugger'
@@ -473,6 +473,26 @@ function Dashboard() {
       addLog('error', `Error loading orders: ${error.message}`)
     }
   }
+
+  const handleClearReports = async () => {
+    if (!window.confirm('Are you sure you want to delete ALL reports and screenshots? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const result = await clearOrdersReport()
+      if (result.success) {
+        addLog('success', 'All reports cleared successfully')
+        loadOrdersReport() // Refresh list
+      } else {
+        addLog('error', `Failed to clear reports: ${result.error}`)
+      }
+    } catch (error) {
+      addLog('error', `Error clearing reports: ${error.message}`)
+    }
+  }
+
+
 
   const handleDownloadOrders = async () => {
     try {
@@ -1647,6 +1667,17 @@ function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
+            {/* Button Container */}
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={handleClearReports}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-white font-semibold shadow-lg hover:shadow-red-500/20"
+              >
+                <Trash2 className="w-4 h-4" />
+                Clear All Reports
+              </button>
+            </div>
+
             {/* Stats Overview */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-gradient-to-br from-green-900/50 to-emerald-900/50 backdrop-blur-xl rounded-xl p-6 border border-green-500/20 shadow-2xl">

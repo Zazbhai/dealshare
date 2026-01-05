@@ -390,6 +390,57 @@ def download_orders():
         }), 500
 
 
+@app.route('/api/orders/clear', methods=['DELETE'])
+@require_auth
+def clear_orders():
+    """Clear all orders and screenshots"""
+    try:
+        import csv
+        
+        base_dir = os.path.dirname(os.path.dirname(__file__))
+        
+        # 1. Clear Screenshots
+        screenshots_dir = os.path.join(base_dir, 'screenshots')
+        if os.path.exists(screenshots_dir):
+            for filename in os.listdir(screenshots_dir):
+                file_path = os.path.join(screenshots_dir, filename)
+                if os.path.isfile(file_path):
+                    try:
+                        os.remove(file_path)
+                    except Exception as e:
+                        print(f"Error deleting {file_path}: {e}")
+        
+        # 2. Clear CSV (keep header)
+        csv_file = os.path.join(base_dir, 'my_orders.csv')
+        if os.path.exists(csv_file):
+            header = None
+            try:
+                with open(csv_file, 'r', encoding='utf-8') as f:
+                    header = f.readline()
+                
+                # If file was empty or header is empty/whitespace, set default
+                if not header or not header.strip():
+                     header = "Timestamp,Screenshot URL,Status\n"
+                     
+                with open(csv_file, 'w', encoding='utf-8', newline='') as f:
+                    f.write(header)
+            except Exception as e:
+                # If error reading/writing, restore default header
+                with open(csv_file, 'w', encoding='utf-8', newline='') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(["Timestamp", "Screenshot URL", "Status"])
+                    
+        return jsonify({
+            "success": True,
+            "message": "All reports and screenshots cleared successfully"
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
 # ==================== PROTECTED API ENDPOINTS ====================
 
 def get_user_api_config():

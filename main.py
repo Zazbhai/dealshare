@@ -923,7 +923,7 @@ def main():
                 error_msg = str(e)
                 if "Page closed" in error_msg or "TargetClosedError" in error_msg or "has been closed" in error_msg:
                     print(f"❌ Location selection failed: Page was closed. Cannot continue.")
-                    raise
+                    fail_and_exit(f"Location selection failed: {error_msg}", page, browser)
                 
                 print(f"⚠ Location selection failed, retrying... Error: {error_msg}")
                 try:
@@ -934,7 +934,7 @@ def main():
                     select_location(page, search_input, location_text)
                 except (TimeoutError, PlaywrightError, Exception) as retry_error:
                     print(f"❌ Location selection retry also failed: {retry_error}")
-                    raise
+                    fail_and_exit(f"Location selection retry failed: {retry_error}", page, browser)
         else:
             print("⏭️ Location selection step skipped (disabled in settings)")
 
@@ -1193,68 +1193,104 @@ def main():
         
         time.sleep(1)
 
-        btn = page.locator("button.AddToCart_cartButton__tWwqP")
-        btn.wait_for(state="visible", timeout=15000)
-        btn.click(force=True)
-        print("✅ Proceed to pay clicked")
-        time.sleep(2)
-
         # -----------------------------
-        # ADDRESS
+        # ADDRESS LOOP (Retry until proceeded)
         # -----------------------------
-        print("📝 Filling address details...")
-        
-        # Get order details from environment variables
-        automation_name = os.environ.get('AUTOMATION_NAME', '')
-        automation_house_flat = os.environ.get('AUTOMATION_HOUSE_FLAT', '')
-        automation_landmark = os.environ.get('AUTOMATION_LANDMARK', '')
-        
-        print(f"[DEBUG] Order details from environment:")
-        print(f"[DEBUG]   Name: {automation_name}")
-        print(f"[DEBUG]   House/Flat: {automation_house_flat}")
-        print(f"[DEBUG]   Landmark: {automation_landmark}")
-        
-        if not automation_name or not automation_house_flat or not automation_landmark:
-            fail_and_exit("Order details (name, house/flat, landmark) are required but not configured", page, browser)
-        
-        # Wait for form to be visible
-        page.wait_for_selector("input[name='userName']", state="visible", timeout=10000)
-        time.sleep(1)
+        address_retry = 0
+        while True:
+            print(f"🔄 Address Flow - Attempt {address_retry + 1}")
+            
+            # Click Proceed to Pay/Checkout
+            try:
+                btn = page.locator("button.AddToCart_cartButton__tWwqP")
+                btn.wait_for(state="visible", timeout=15000)
+                btn.click(force=True)
+                print("✅ Proceed to pay clicked")
+            except Exception as e:
+                print(f"⚠️ Potential error clicking proceed: {e}")
+                # Don't exit yet, might be already on address page
+            
+            time.sleep(2)
 
-        # Fill name
-        name_input = page.locator("input[name='userName']")
-        name_input.fill(automation_name)
-        print(f"✅ Filled name: {automation_name}")
-        time.sleep(0.5)
+            # -----------------------------
+            # ADDRESS DETAILS
+            # -----------------------------
+            print("📝 Filling address details...")
+            
+            # Get order details from environment variables
+            automation_name = os.environ.get('AUTOMATION_NAME', '')
+            automation_house_flat = os.environ.get('AUTOMATION_HOUSE_FLAT', '')
+            automation_landmark = os.environ.get('AUTOMATION_LANDMARK', '')
+            
+            print(f"[DEBUG] Order details from environment:")
+            print(f"[DEBUG]   Name: {automation_name}")
+            print(f"[DEBUG]   House/Flat: {automation_house_flat}")
+            print(f"[DEBUG]   Landmark: {automation_landmark}")
+            
+            if not automation_name or not automation_house_flat or not automation_landmark:
+                fail_and_exit("Order details (name, house/flat, landmark) are required but not configured", page, browser)
+            
+            try:
+                # Wait for form to be visible (implies we are on address page)
+                page.wait_for_selector("input[name='userName']", state="visible", timeout=10000)
+                time.sleep(1)
 
-        # Fill flat
-        flat_input = page.locator("input[name='flat']")
-        flat_input.fill(automation_house_flat)
-        print(f"✅ Filled house/flat: {automation_house_flat}")
-        time.sleep(0.5)
+                # Fill name
+                name_input = page.locator("input[name='userName']")
+                name_input.fill(automation_name)
+                print(f"✅ Filled name: {automation_name}")
+                time.sleep(0.5)
 
-        # Fill landmark
-        landmark_input = page.locator("input[name='landMark']")
-        landmark_input.fill(automation_landmark)
-        print(f"✅ Filled landmark: {automation_landmark}")
-        time.sleep(1)
+                # Fill flat
+                flat_input = page.locator("input[name='flat']")
+                flat_input.fill(automation_house_flat)
+                print(f"✅ Filled house/flat: {automation_house_flat}")
+                time.sleep(0.5)
 
-        # Save address with robust clicking
-        print("💾 Saving address...")
-        
-        # Use text selector to get the correct button
-        save_btn = page.locator("button.btn.btn-secondary", has_text="Save Address")
-        
-        # Wait for button to be visible and enabled
-        save_btn.wait_for(state="visible", timeout=5000)
-        time.sleep(0.5)
-        
-        # Try multiple click methods
-        if robust_click(page, save_btn, method="locator"):
-            print("✅ Address saved successfully")
-        else:
-            print("❌ Failed to save address")
-            fail_and_exit("Could not save address", page, browser)
+                # Fill landmark
+                landmark_input = page.locator("input[name='landMark']")
+                landmark_input.fill(automation_landmark)
+                print(f"✅ Filled landmark: {automation_landmark}")
+                time.sleep(1)
+
+                # Save address with robust clicking
+                print("💾 Saving address...")
+                
+                # Use text selector to get the correct button
+                save_btn = page.locator("button.btn.btn-secondary", has_text="Save Address")
+                
+                # Wait for button to be visible and enabled
+                save_btn.wait_for(state="visible", timeout=5000)
+                time.sleep(0.5)
+                
+                # Try multiple click methods
+                if robust_click(page, save_btn, method="locator"):
+                    print("✅ Address saved successfully")
+                else:
+                    print("❌ Failed to save address (click failed)")
+                    # We continue to verification step anyway
+            except Exception as e:
+                 print(f"⚠️ Error filling address: {e}")
+                 # Continue to check status
+            
+            time.sleep(3)
+            
+            # -----------------------------
+            # VERIFY ADVANCEMENT
+            # -----------------------------
+            # Check if "Proceed" button (AddToCart) is still visible
+            # If visible, it means we are stuck or bounced back
+            proceed_btn_check = page.locator("button.AddToCart_cartButton__tWwqP")
+            if proceed_btn_check.count() > 0 and proceed_btn_check.first.is_visible():
+                print("⚠️ 'Proceed' button still visible - Address flow did not advance. Retrying...")
+                address_retry += 1
+                if address_retry > 20: # Max retries
+                    fail_and_exit("Failed to advance past address screen after 20 retries", page, browser)
+                time.sleep(1)
+                continue
+            else:
+                print("✅ Check passed: 'Proceed' button is gone. Flow advanced.")
+                break
         
         time.sleep(3)
 
